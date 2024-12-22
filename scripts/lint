@@ -1,0 +1,60 @@
+#!/bin/bash
+
+FIX=false
+
+for arg in "$@"; do
+	if [[ "$arg" == "--fix" ]]; then
+		FIX=true
+	fi
+done
+
+
+
+if [[ "$FIX" == true ]]; then
+	gum log -sl warn "Warning: Changes may be written to files"
+fi
+
+gum log -sl info "Running format"
+
+# Run gofmt
+if [[ "$FIX" == true ]]; then
+	gofmt -s -w .
+else
+	gofmt -s -d .
+fi
+
+if [ $? -ne 0 ]; then
+	if [[ "$FIX" == true ]]; then
+		gum log -sl error "gofmt detected errors and failed to fix them"
+	else
+		gum log -sl error "gofmt detected errors, use \`devbox run lint --fix\` to try autofix them"
+	fi
+	exit 1
+fi
+
+# Run golangci-lint
+
+gum log -sl info "Running linters"
+
+if [[ "$FIX" == true ]]; then
+	golangci-lint run --allow-parallel-runners --color always --print-issued-lines --fix
+else
+	golangci-lint run --allow-parallel-runners --color always --print-issued-lines
+fi
+
+if [ $? -ne 0 ]; then
+	if [[ "$FIX" == true ]]; then
+		gum log -sl error "golangci-lint detected errors and failed to fix them"
+	else
+		gum log -sl error "golangci-lint detected errors, use \`devbox run lint --fix\` to try autofix them"
+	fi
+	exit 1
+fi
+
+gum log -sl info "Linting and formatting completed successfully"
+
+if [[ "$FIX" == true ]]; then
+	gum log -sl warn "Any possible changes have been written to files"
+fi
+
+exit 0

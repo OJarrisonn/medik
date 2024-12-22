@@ -1,0 +1,16 @@
+{
+    "linters": {
+        "enable": [
+            "goconst",
+            "dupl",
+            "nilerr",
+            "nilnil",
+            "nonamedreturns",
+            "tagalign",
+            "unconvert",
+            "unparam",
+            "usestdlibvars",
+            "wastedassign"
+        ]
+    }
+}
