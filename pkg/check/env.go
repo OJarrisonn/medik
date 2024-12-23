@@ -16,7 +16,7 @@ func CheckEnv(name string) bool {
 type ValidateEnvRegexError struct {
 	EnvVar,
 	Value,
-	Regex  string
+	Regex string
 }
 
 func (e ValidateEnvRegexError) Error() string {

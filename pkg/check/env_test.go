@@ -91,7 +91,7 @@ func TestValidateEnvRegexFail(t *testing.T) {
 			t.Log(err)
 		default:
 			t.Errorf("%s raised an error %v\n", k, err)
-		} 
+		}
 	}
 
 	for _, v := range unset_vars {
@@ -103,7 +103,7 @@ func TestValidateEnvRegexFail(t *testing.T) {
 
 func TestValidateEnvRegexPanic(t *testing.T) {
 	t.Setenv("MEDIK_FOO1", "foo1")
-	ok, err := ValidateEnvRegex("MEDIK_FOO1", "foo[0-9");
+	ok, err := ValidateEnvRegex("MEDIK_FOO1", "foo[0-9")
 
 	if ok || err == nil {
 		t.Errorf("MEDIK_FOO1 is set and the regex `foo[0-9` was approved\n")
