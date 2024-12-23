@@ -31,10 +31,10 @@ func ValidateEnvRegex(name string, regex string) (bool, error) {
 		return false, nil
 	}
 
-	regexp, err := regexp.Compile(regex)
+	regexp, rerr := regexp.Compile(regex)
 
-	if err != nil {
-		return false, err
+	if rerr != nil {
+		return false, rerr
 	}
 
 	if !regexp.MatchString(val) {

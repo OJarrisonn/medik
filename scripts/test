@@ -1,5 +1,35 @@
 #!/bin/bash
 
-gum log -sl info "No tests to run"
+COVERAGE_FILE=coverage/coverage.out
+COVERAGE_HTML=coverage/coverage.html
+COVERAGE=false
 
-go test . 
+for arg in "$@"; do
+	if [[ "$arg" == "--coverage" ]]; then
+		COVERAGE=true
+	fi
+done
+
+gum log -sl info "Running tests for medik"
+
+SUCCESS=0
+
+if [[ "$COVERAGE" == true ]]; then
+    go test -v -cover -coverprofile=$COVERAGE_FILE ./ ./pkg/...
+    SUCCESS=$?
+    if [ $SUCCESS -eq 0 ]; then
+        gum log -sl info "Generating coverage report"
+        go tool cover -html=$COVERAGE_FILE -o $COVERAGE_HTML
+    fi
+else
+    go test -v ./ ./pkg/...
+    SUCCESS=$?
+fi
+
+if [ $SUCCESS -ne 0 ]; then
+    gum log -sl error "Tests failed"
+    exit 1
+else
+    gum log -sl info "Tests passed"
+    exit 0
+fi
