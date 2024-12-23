@@ -13,7 +13,7 @@ func main() {
 	}
 
 	for _, v := range vars {
-		if rules.CheckEnv(v) {
+		if ok, _ := (&rules.CheckEnvRule{EnvVar: v}).Validate(); ok {
 			fmt.Printf("%s is set\n", v)
 		} else {
 			fmt.Printf("%s is not set\n", v)

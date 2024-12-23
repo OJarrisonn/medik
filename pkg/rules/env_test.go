@@ -22,14 +22,28 @@ func TestCheckEnv(t *testing.T) {
 	}
 
 	for k := range set_vars {
-		if !CheckEnv(k) {
+		ok, err := (&CheckEnvRule{EnvVar: k}).Validate()
+		
+		if !ok {
 			t.Errorf("%s is not set\n", k)
+		}
+
+		if err != nil {
+			t.Errorf("%v\n", err)
 		}
 	}
 
 	for _, v := range unset_vars {
-		if CheckEnv(v) {
+		ok, err := (&CheckEnvRule{EnvVar: v}).Validate()
+
+		if ok {
 			t.Errorf("%s is set\n", v)
+		}
+
+		if err == nil {
+			t.Errorf("No error was raised\n")
+		} else {
+			t.Logf("%v\n", err)
 		}
 	}
 }
@@ -54,14 +68,16 @@ func TestValidateEnvRegexSucceed(t *testing.T) {
 	}
 
 	for k := range set_vars {
-		if ok, _ := ValidateEnvRegex(k, regex); !ok {
+		if ok, _ := (&ValidateEnvRegexRule{k, regex}).Validate(); !ok {
 			t.Errorf("%s is not set\n", k)
 		}
 	}
 
 	for _, v := range unset_vars {
-		if ok, _ := ValidateEnvRegex(v, regex); ok {
+		if ok, err := (&ValidateEnvRegexRule{v, regex}).Validate(); ok {
 			t.Errorf("%s is set\n", v)
+		} else {
+			t.Logf("%v\n", err)
 		}
 	}
 }
@@ -86,8 +102,8 @@ func TestValidateEnvRegexFail(t *testing.T) {
 	}
 
 	for k := range set_vars {
-		switch _, err := ValidateEnvRegex(k, regex); err.(type) {
-		case ValidateEnvRegexError:
+		switch _, err := (&ValidateEnvRegexRule{k, regex}).Validate(); err.(type) {
+		case *ValidateEnvRegexError:
 			t.Log(err)
 		default:
 			t.Errorf("%s raised an error %v\n", k, err)
@@ -95,7 +111,7 @@ func TestValidateEnvRegexFail(t *testing.T) {
 	}
 
 	for _, v := range unset_vars {
-		if ok, _ := ValidateEnvRegex(v, regex); ok {
+		if ok, _ := (&ValidateEnvRegexRule{v, regex}).Validate(); ok {
 			t.Errorf("%s is set\n", v)
 		}
 	}
@@ -103,7 +119,7 @@ func TestValidateEnvRegexFail(t *testing.T) {
 
 func TestValidateEnvRegexPanic(t *testing.T) {
 	t.Setenv("MEDIK_FOO1", "foo1")
-	ok, err := ValidateEnvRegex("MEDIK_FOO1", "foo[0-9")
+	ok, err := (&ValidateEnvRegexRule{"MEDIK_FOO1", "foo[0-9"}).Validate()
 
 	if ok || err == nil {
 		t.Errorf("MEDIK_FOO1 is set and the regex `foo[0-9` was approved\n")
