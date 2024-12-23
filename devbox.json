@@ -3,7 +3,8 @@
   "packages": [
     "go@1.23",
     "golangci-lint@1.62",
-    "gum@0.14.5"
+    "gum@0.14.5",
+    "delve@1.23"
   ],
   "shell": {
     "init_hook": [
