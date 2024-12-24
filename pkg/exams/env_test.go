@@ -598,11 +598,11 @@ func TestEnvHostnamePass(t *testing.T) {
 	t.Setenv("MEDIK_FOO1", "localhost")
 	t.Setenv("MEDIK_FOO2", "http://localhost")
 
-	if ok, err := (&EnvHostname{"MEDIK_FOO1", false, ""}).Examinate(); !ok {
+	if ok, err := (&EnvHostname{"MEDIK_FOO1", ""}).Examinate(); !ok {
 		t.Errorf("MEDIK_FOO1 is not set to a valid host, %v\n", err)
 	}
 
-	if ok, err := (&EnvHostname{"MEDIK_FOO2", true, "http"}).Examinate(); !ok {
+	if ok, err := (&EnvHostname{"MEDIK_FOO2", "http"}).Examinate(); !ok {
 		t.Errorf("MEDIK_FOO2 is not set to a valid host, %v\n", err)
 	}
 }
@@ -611,13 +611,13 @@ func TestEnvHostnameFail(t *testing.T) {
 	t.Setenv("MEDIK_FOO1", "http://localhost")
 	t.Setenv("MEDIK_FOO2", "\n")
 
-	if ok, err := (&EnvHostname{"MEDIK_FOO1", true, "https"}).Examinate(); ok {
+	if ok, err := (&EnvHostname{"MEDIK_FOO1", "https"}).Examinate(); ok {
 		t.Errorf("MEDIK_FOO1 is being accepted as a hostname\n")
 	} else {
 		t.Logf("%v\n", err)
 	}
 
-	if ok, err := (&EnvHostname{"MEDIK_FOO2", false, ""}).Examinate(); ok {
+	if ok, err := (&EnvHostname{"MEDIK_FOO2", ""}).Examinate(); ok {
 		t.Errorf("MEDIK_FOO2 is being accepted as a hostname\n")
 	} else {
 		t.Logf("%v\n", err)
@@ -632,7 +632,7 @@ func TestEnvHostnameUnset(t *testing.T) {
 	}
 
 	for _, v := range unset_vars {
-		if ok, _ := (&EnvHostname{v, false, ""}).Examinate(); ok {
+		if ok, _ := (&EnvHostname{v, ""}).Examinate(); ok {
 			t.Errorf("%s is set\n", v)
 		}
 	}

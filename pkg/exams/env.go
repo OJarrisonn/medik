@@ -313,7 +313,6 @@ func (r *EnvIpAddr) Examinate() (bool, error) {
 // A rule to check if an environment variable is set to a hostname
 type EnvHostname struct {
 	EnvVar           string
-	SpecificProtocol bool
 	Protocol         string
 }
 
@@ -336,7 +335,7 @@ func (r *EnvHostname) validateUrl(rawUrl string) (bool, error) {
 		return false, err
 	}
 
-	if !r.SpecificProtocol {
+	if r.Protocol == "" {
 		return true, nil
 	}
 
