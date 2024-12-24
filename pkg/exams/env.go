@@ -9,8 +9,10 @@ import (
 	"strings"
 )
 
-// A rule to simply check if a given environment variable is set
-// This rule cannot heal the system
+// Check if a given environment variable is set
+// 
+// type: env.is-set,
+// vars: []string
 type EnvIsSet struct {
 	EnvVar string
 }
@@ -25,6 +27,11 @@ func (r *EnvIsSet) Examinate() (bool, error) {
 	return true, nil
 }
 
+// Check if an environment variable is set and not empty
+// Strings with only whitespace are considered empty
+//
+// type: env.not-empty
+// vars: []string
 type EnvIsSetNotEmpty struct {
 	EnvVar string
 }
@@ -43,13 +50,17 @@ func (r *EnvIsSetNotEmpty) Examinate() (bool, error) {
 	return true, nil
 }
 
-// A rule to check if an environment variable is set and matches a regex
+// Check if an environment variable is set and matches a regex
+// The regex is a string that will be compiled into a regular expression using Go's regexp package
+//
+// type: env.regex,
+// vars: []string,
+// regex: string
 type EnvRegex struct {
 	EnvVar string
 	Regex  string
 }
 
-// ValidateEnvRegex checks if an environment variable is set and matches a regex
 func (r *EnvRegex) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
@@ -70,13 +81,16 @@ func (r *EnvRegex) Examinate() (bool, error) {
 	return true, nil
 }
 
-// A rule to check if an environment variable is set and matches one of a list of possible values
+// Check if an environment variable is set and matches one of a list of possible values
+//
+// type: env.options,
+// vars: []string,
+// options: []string
 type EnvOption struct {
 	EnvVar  string
 	Options []string
 }
 
-// ValidateEnvOneOf checks if an environment variable is set and matches one of a list of possible values
 // TODO: Make faster lookups
 func (r *EnvOption) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
@@ -94,12 +108,15 @@ func (r *EnvOption) Examinate() (bool, error) {
 	return false, fmt.Errorf("environment variable %v has value %v which is not one of %v", r.EnvVar, val, r.Options)
 }
 
-// A rule to check if an environment variable is a number
+// Check if an environment variable is a number
+// This rule will check if the environment variable is a number
+// 
+// type: env.int,
+// vars: []string
 type EnvInteger struct {
 	EnvVar string
 }
 
-// ValidateEnvNumber checks if an environment variable is a number
 func (r *EnvInteger) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
@@ -116,15 +133,19 @@ func (r *EnvInteger) Examinate() (bool, error) {
 	return true, nil
 }
 
-// A rule to check if an environment variable is a number within a range
+// Check if an environment variable is a number within a range
 // Min and Max are inclusive
+//
+// type: env.int-range,
+// vars: []string,
+// min: int,
+// max: int
 type EnvIntegerRange struct {
 	EnvVar string
 	Min    int
 	Max    int
 }
 
-// ValidateEnvNumber checks if an environment variable is a number
 func (r *EnvIntegerRange) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
@@ -145,12 +166,14 @@ func (r *EnvIntegerRange) Examinate() (bool, error) {
 	return true, nil
 }
 
-// A rule to check if an environment variable is a number
+// Check if an environment variable is a floating number
+//
+// type: env.float,
+// vars: []string
 type EnvFloat struct {
 	EnvVar string
 }
 
-// ValidateEnvNumber checks if an environment variable is a number
 func (r *EnvFloat) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
@@ -167,15 +190,19 @@ func (r *EnvFloat) Examinate() (bool, error) {
 	return true, nil
 }
 
-// A rule to check if an environment variable is a number within a range
+// Check if an environment variable is a number within a range
 // Min and Max are inclusive
+//
+// type: env.float-range,
+// vars: []string,
+// min: float,
+// max: float
 type EnvFloatRange struct {
 	EnvVar string
 	Min    float64
 	Max    float64
 }
 
-// ValidateEnvNumber checks if an environment variable is a number
 func (r *EnvFloatRange) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
@@ -196,12 +223,15 @@ func (r *EnvFloatRange) Examinate() (bool, error) {
 	return true, nil
 }
 
-// A rule to check if an environment variable is set to a file that exists
+// TODO: Add support to point to files that don't exist
+// Check if an environment variable is set to a file that exists
+// 
+// type: env.file,
+// vars: []string
 type EnvFile struct {
 	EnvVar string
 }
 
-// ValidateEnvFile checks if an environment variable is set to a file that exists
 func (r *EnvFile) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
@@ -218,12 +248,14 @@ func (r *EnvFile) Examinate() (bool, error) {
 	return true, nil
 }
 
-// A rule to check if an environment variable is set to a directory that exists
+// Check if an environment variable is set to a directory that exists
+//
+// type: env.dir,
+// vars: []string
 type EnvDir struct {
 	EnvVar string
 }
 
-// ValidateEnvDir checks if an environment variable is set to a directory that exists
 func (r *EnvDir) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
@@ -244,12 +276,14 @@ func (r *EnvDir) Examinate() (bool, error) {
 	return true, nil
 }
 
-// A rule to check if an environment variable is set to an IP address
+// Check if an environment variable is set to an IP address
+//
+// type: env.ipv4,
+// vars: []string
 type EnvIpv4Addr struct {
 	EnvVar string
 }
 
-// ValidateEnvIpAddr checks if an environment variable is set to an IP address
 func (r *EnvIpv4Addr) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
@@ -266,12 +300,14 @@ func (r *EnvIpv4Addr) Examinate() (bool, error) {
 	return true, nil
 }
 
-// A rule to check if an environment variable is set to an IP address
+// Check if an environment variable is set to an IP address
+//
+// type: env.ipv6,
+// vars: []string
 type EnvIpv6Addr struct {
 	EnvVar string
 }
 
-// ValidateEnvIpAddr checks if an environment variable is set to an IP address
 func (r *EnvIpv6Addr) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
@@ -288,12 +324,14 @@ func (r *EnvIpv6Addr) Examinate() (bool, error) {
 	return true, nil
 }
 
-// A rule to check if an environment variable is set to an IP address
+// Check if an environment variable is set to an IP address
+//
+// type: env.ip,
+// vars: []string
 type EnvIpAddr struct {
 	EnvVar string
 }
 
-// ValidateEnvIpAddr checks if an environment variable is set to an IP address (v4 or v6)
 func (r *EnvIpAddr) Examinate() (bool, error) {
 	ipv4 := &EnvIpv4Addr{r.EnvVar}
 
@@ -311,12 +349,15 @@ func (r *EnvIpAddr) Examinate() (bool, error) {
 }
 
 // A rule to check if an environment variable is set to a hostname
+//
+// type: env.hostname,
+// vars: []string,
+// protocol: string
 type EnvHostname struct {
 	EnvVar           string
 	Protocol         string
 }
 
-// ValidateEnvHostname checks if an environment variable is set to a hostname
 func (r *EnvHostname) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
