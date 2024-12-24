@@ -7,48 +7,48 @@ import (
 	"strconv"
 )
 
-type CheckEnvError struct {
+type EnvIsSetError struct {
 	EnvVar string
 }
 
-func (e *CheckEnvError) Error() string {
+func (e *EnvIsSetError) Error() string {
 	return fmt.Sprintf("Environment variable %v is not set", e.EnvVar)
 }
 
 // A rule to simply check if a given environment variable is set
 // This rule cannot heal the system
-type CheckEnvRule struct {
+type EnvIsSet struct {
 	EnvVar string
 }
 
-func (r *CheckEnvRule) Validate() (bool, error) {
+func (r *EnvIsSet) Validate() (bool, error) {
 	_, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
-		return false, &CheckEnvError{r.EnvVar}
+		return false, &EnvIsSetError{r.EnvVar}
 	}
 
 	return true, nil
 }
 
-type ValidateEnvRegexError struct {
+type EnvRegexError struct {
 	EnvVar,
 	Value,
 	Regex string
 }
 
-func (e *ValidateEnvRegexError) Error() string {
+func (e *EnvRegexError) Error() string {
 	return fmt.Sprintf("Environment variable %v has value %v which doesn't match %v", e.EnvVar, e.Value, e.Regex)
 }
 
 // A rule to check if an environment variable is set and matches a regex
-type ValidateEnvRegexRule struct {
+type EnvRegex struct {
 	EnvVar string
 	Regex  string
 }
 
 // ValidateEnvRegex checks if an environment variable is set and matches a regex
-func (r *ValidateEnvRegexRule) Validate() (bool, error) {
+func (r *EnvRegex) Validate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -62,30 +62,30 @@ func (r *ValidateEnvRegexRule) Validate() (bool, error) {
 	}
 
 	if !regexp.MatchString(val) {
-		return false, &ValidateEnvRegexError{r.EnvVar, val, r.Regex}
+		return false, &EnvRegexError{r.EnvVar, val, r.Regex}
 	}
 
 	return true, nil
 }
 
-type ValidateEnvOneOfError struct {
-	Rule *ValidateEnvOneOfRule
+type EnvOptionError struct {
+	Rule  *EnvOption
 	Value string
 }
 
-func (e *ValidateEnvOneOfError) Error() string {
+func (e *EnvOptionError) Error() string {
 	return fmt.Sprintf("Environment variable %v has value %v which is not one of %v", e.Rule.EnvVar, e.Value, e.Rule.Options)
 }
 
 // A rule to check if an environment variable is set and matches one of a list of possible values
-type ValidateEnvOneOfRule struct {
-	EnvVar string
+type EnvOption struct {
+	EnvVar  string
 	Options []string
 }
 
 // ValidateEnvOneOf checks if an environment variable is set and matches one of a list of possible values
 // TODO: Make faster lookups
-func (r *ValidateEnvOneOfRule) Validate() (bool, error) {
+func (r *EnvOption) Validate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -98,25 +98,25 @@ func (r *ValidateEnvOneOfRule) Validate() (bool, error) {
 		}
 	}
 
-	return false, &ValidateEnvOneOfError{r, val}
+	return false, &EnvOptionError{r, val}
 }
 
-type ValidateEnvIntegerError struct {
+type EnvIntegerError struct {
 	EnvVar string
-	Value string
+	Value  string
 }
 
-func (e *ValidateEnvIntegerError) Error() string {
+func (e *EnvIntegerError) Error() string {
 	return fmt.Sprintf("Environment variable %v has value %v which is not a number", e.EnvVar, e.Value)
 }
 
 // A rule to check if an environment variable is a number
-type ValidateEnvIntegerRule struct {
+type EnvInteger struct {
 	EnvVar string
 }
 
 // ValidateEnvNumber checks if an environment variable is a number
-func (r *ValidateEnvIntegerRule) Validate() (bool, error) {
+func (r *EnvInteger) Validate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -126,7 +126,7 @@ func (r *ValidateEnvIntegerRule) Validate() (bool, error) {
 	_, err := strconv.Atoi(val)
 
 	if err != nil {
-		return false, &ValidateEnvIntegerError{r.EnvVar, val}
+		return false, &EnvIntegerError{r.EnvVar, val}
 	}
 
 	return true, nil

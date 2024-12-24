@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestCheckEnv(t *testing.T) {
+func TestEnvIsSet(t *testing.T) {
 	set_vars := map[string]string{
 		"MEDIK_FOO1": "foo1",
 		"MEDIK_FOO2": "foo2",
@@ -22,8 +22,8 @@ func TestCheckEnv(t *testing.T) {
 	}
 
 	for k := range set_vars {
-		ok, err := (&CheckEnvRule{EnvVar: k}).Validate()
-		
+		ok, err := (&EnvIsSet{EnvVar: k}).Validate()
+
 		if !ok {
 			t.Errorf("%s is not set\n", k)
 		}
@@ -34,7 +34,7 @@ func TestCheckEnv(t *testing.T) {
 	}
 
 	for _, v := range unset_vars {
-		ok, err := (&CheckEnvRule{EnvVar: v}).Validate()
+		ok, err := (&EnvIsSet{EnvVar: v}).Validate()
 
 		if ok {
 			t.Errorf("%s is set\n", v)
@@ -48,7 +48,7 @@ func TestCheckEnv(t *testing.T) {
 	}
 }
 
-func TestValidateEnvRegexSucceed(t *testing.T) {
+func TestEnvRegexPass(t *testing.T) {
 	set_vars := map[string]string{
 		"MEDIK_FOO1": "foo1",
 		"MEDIK_FOO2": "foo2",
@@ -68,13 +68,13 @@ func TestValidateEnvRegexSucceed(t *testing.T) {
 	}
 
 	for k := range set_vars {
-		if ok, _ := (&ValidateEnvRegexRule{k, regex}).Validate(); !ok {
+		if ok, _ := (&EnvRegex{k, regex}).Validate(); !ok {
 			t.Errorf("%s is not set\n", k)
 		}
 	}
 
 	for _, v := range unset_vars {
-		if ok, err := (&ValidateEnvRegexRule{v, regex}).Validate(); ok {
+		if ok, err := (&EnvRegex{v, regex}).Validate(); ok {
 			t.Errorf("%s is set\n", v)
 		} else {
 			t.Logf("%v\n", err)
@@ -82,7 +82,7 @@ func TestValidateEnvRegexSucceed(t *testing.T) {
 	}
 }
 
-func TestValidateEnvRegexFail(t *testing.T) {
+func TestEnvRegexFail(t *testing.T) {
 	set_vars := map[string]string{
 		"MEDIK_FOO1": "foo1",
 		"MEDIK_FOO2": "foo2",
@@ -102,8 +102,8 @@ func TestValidateEnvRegexFail(t *testing.T) {
 	}
 
 	for k := range set_vars {
-		switch _, err := (&ValidateEnvRegexRule{k, regex}).Validate(); err.(type) {
-		case *ValidateEnvRegexError:
+		switch _, err := (&EnvRegex{k, regex}).Validate(); err.(type) {
+		case *EnvRegexError:
 			t.Log(err)
 		default:
 			t.Errorf("%s raised an error %v\n", k, err)
@@ -111,15 +111,15 @@ func TestValidateEnvRegexFail(t *testing.T) {
 	}
 
 	for _, v := range unset_vars {
-		if ok, _ := (&ValidateEnvRegexRule{v, regex}).Validate(); ok {
+		if ok, _ := (&EnvRegex{v, regex}).Validate(); ok {
 			t.Errorf("%s is set\n", v)
 		}
 	}
 }
 
-func TestValidateEnvRegexPanic(t *testing.T) {
+func TestEnvRegexCompileError(t *testing.T) {
 	t.Setenv("MEDIK_FOO1", "foo1")
-	ok, err := (&ValidateEnvRegexRule{"MEDIK_FOO1", "foo[0-9"}).Validate()
+	ok, err := (&EnvRegex{"MEDIK_FOO1", "foo[0-9"}).Validate()
 
 	if ok || err == nil {
 		t.Errorf("MEDIK_FOO1 is set and the regex `foo[0-9` was approved\n")
@@ -128,7 +128,7 @@ func TestValidateEnvRegexPanic(t *testing.T) {
 	t.Logf("%v %T", err, err)
 }
 
-func TestValidateEnvOneOfPass(t *testing.T) {
+func TestEnvOptionPass(t *testing.T) {
 	set_vars := map[string]string{
 		"MEDIK_FOO1": "foo1",
 		"MEDIK_FOO2": "foo2",
@@ -142,13 +142,13 @@ func TestValidateEnvOneOfPass(t *testing.T) {
 	}
 
 	for k := range set_vars {
-		if ok, _ := (&ValidateEnvOneOfRule{k, options}).Validate(); !ok {
+		if ok, _ := (&EnvOption{k, options}).Validate(); !ok {
 			t.Errorf("%s is not set\n", k)
 		}
 	}
 }
 
-func TestValidateEnvOneOfUnset(t *testing.T) {
+func TestEnvOptionUnset(t *testing.T) {
 	unset_vars := []string{
 		"MEDIK_FOO4",
 		"MEDIK_FOO5",
@@ -158,13 +158,13 @@ func TestValidateEnvOneOfUnset(t *testing.T) {
 	options := []string{"foo1", "foo2", "foo3"}
 
 	for _, v := range unset_vars {
-		if ok, _ := (&ValidateEnvOneOfRule{v, options}).Validate(); ok {
+		if ok, _ := (&EnvOption{v, options}).Validate(); ok {
 			t.Errorf("%s is set\n", v)
 		}
 	}
 }
 
-func TestValidateEnvOneOfFail(t *testing.T) {
+func TestEnvOptionFail(t *testing.T) {
 	set_vars := map[string]string{
 		"MEDIK_FOO1": "foo4",
 		"MEDIK_FOO2": "foo5",
@@ -178,7 +178,7 @@ func TestValidateEnvOneOfFail(t *testing.T) {
 	}
 
 	for k := range set_vars {
-		if ok, err := (&ValidateEnvOneOfRule{k, options}).Validate(); ok {
+		if ok, err := (&EnvOption{k, options}).Validate(); ok {
 			t.Errorf("%s is valid\n", k)
 		} else {
 			t.Logf("%v\n", err)
@@ -186,7 +186,7 @@ func TestValidateEnvOneOfFail(t *testing.T) {
 	}
 }
 
-func TestValidateEnvIntegerPass(t *testing.T) {
+func TestEnvIntegerPass(t *testing.T) {
 	set_vars := map[string]string{
 		"MEDIK_FOO1": "1",
 		"MEDIK_FOO2": "2",
@@ -198,13 +198,13 @@ func TestValidateEnvIntegerPass(t *testing.T) {
 	}
 
 	for k := range set_vars {
-		if ok, err := (&ValidateEnvIntegerRule{k}).Validate(); !ok {
+		if ok, err := (&EnvInteger{k}).Validate(); !ok {
 			t.Errorf("%s is not set to an integer, %v\n", k, err)
 		}
 	}
 }
 
-func TestValidateEnvIntegerFail(t *testing.T) {
+func TestEnvIntegerFail(t *testing.T) {
 	set_vars := map[string]string{
 		"MEDIK_FOO1": ".1",
 		"MEDIK_FOO2": "2O",
@@ -216,10 +216,24 @@ func TestValidateEnvIntegerFail(t *testing.T) {
 	}
 
 	for k := range set_vars {
-		if ok, err := (&ValidateEnvIntegerRule{k}).Validate(); ok {
+		if ok, err := (&EnvInteger{k}).Validate(); ok {
 			t.Errorf("%s is being accepted as an integer integer\n", k)
 		} else {
 			t.Logf("%v\n", err)
+		}
+	}
+}
+
+func TestEnvIntegerUnset(t *testing.T) {
+	unset_vars := []string{
+		"MEDIK_FOO4",
+		"MEDIK_FOO5",
+		"MEDIK_FOO6",
+	}
+
+	for _, v := range unset_vars {
+		if ok, _ := (&EnvInteger{v}).Validate(); ok {
+			t.Errorf("%s is set\n", v)
 		}
 	}
 }
