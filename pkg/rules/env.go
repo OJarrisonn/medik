@@ -131,3 +131,35 @@ func (r *EnvInteger) Validate() (bool, error) {
 
 	return true, nil
 }
+
+
+type EnvFloatError struct {
+	EnvVar string
+	Value  string
+}
+
+func (e *EnvFloatError) Error() string {
+	return fmt.Sprintf("Environment variable %v has value %v which is not a float", e.EnvVar, e.Value)
+}
+
+// A rule to check if an environment variable is a number
+type EnvFloat struct {
+	EnvVar string
+}
+
+// ValidateEnvNumber checks if an environment variable is a number
+func (r *EnvFloat) Validate() (bool, error) {
+	val, ok := os.LookupEnv(r.EnvVar)
+
+	if !ok {
+		return false, nil
+	}
+
+	_, err := strconv.ParseFloat(val, 64)
+
+	if err != nil {
+		return false, &EnvFloatError{r.EnvVar, val}
+	}
+
+	return true, nil
+}

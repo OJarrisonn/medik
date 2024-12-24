@@ -237,3 +237,55 @@ func TestEnvIntegerUnset(t *testing.T) {
 		}
 	}
 }
+
+func TestEnvFloatPass(t *testing.T) {
+	set_vars := map[string]string{
+		"MEDIK_FOO1": "1.0",
+		"MEDIK_FOO2": "2.0",
+		"MEDIK_FOO3": "3.0",
+	}
+
+	for k, v := range set_vars {
+		t.Setenv(k, v)
+	}
+
+	for k := range set_vars {
+		if ok, err := (&EnvFloat{k}).Validate(); !ok {
+			t.Errorf("%s is not set to a float, %v\n", k, err)
+		}
+	}
+}
+
+func TestEnvFloatFail(t *testing.T) {
+	set_vars := map[string]string{
+		"MEDIK_FOO1": "x.1",
+		"MEDIK_FOO2": "2O",
+		"MEDIK_FOO3": "3f",
+	}
+
+	for k, v := range set_vars {
+		t.Setenv(k, v)
+	}
+
+	for k := range set_vars {
+		if ok, err := (&EnvFloat{k}).Validate(); ok {
+			t.Errorf("%s is being accepted as a float\n", k)
+		} else {
+			t.Logf("%v\n", err)
+		}
+	}
+}
+
+func TestEnvFloatUnset(t *testing.T) {
+	unset_vars := []string{
+		"MEDIK_FOO4",
+		"MEDIK_FOO5",
+		"MEDIK_FOO6",
+	}
+
+	for _, v := range unset_vars {
+		if ok, _ := (&EnvFloat{v}).Validate(); ok {
+			t.Errorf("%s is set\n", v)
+		}
+	}
+}
