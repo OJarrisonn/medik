@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"os"
 	"testing"
 )
 
@@ -44,6 +45,42 @@ func TestEnvIsSet(t *testing.T) {
 			t.Errorf("No error was raised\n")
 		} else {
 			t.Logf("%v\n", err)
+		}
+	}
+}
+
+func TestEnvIsSetNotEmptyPass(t *testing.T) {
+	t.Setenv("MEDIK_FOO1", "abc")
+
+	if ok, err := (&EnvIsSetNotEmpty{"MEDIK_FOO1"}).Validate(); !ok {
+		t.Errorf("MEDIK_FOO1 is not set to an not empty string, %v", err)
+	}
+}
+
+func TestEnvIsSetNotEmptyFail(t *testing.T) {
+	set_vars := map[string]string{
+		"MEDIK_FOO1": "",
+		"MEDIK_FOO2": "   ",
+		"MEDIK_FOO3": "\n",
+	}
+
+	unset_vars := []string{"MEDIK_FOO4", "MEDIK_FOO5", "MEDIK_FOO6"}
+
+	for k, v := range set_vars {
+		t.Setenv(k, v)
+	}
+
+	for k := range set_vars {
+		if ok, err := (&EnvIsSetNotEmpty{k}).Validate(); ok {
+			t.Errorf("%v is being accepted with value \"%v\"", k, os.Getenv(k))
+		} else {
+			t.Log(err)
+		}
+	}
+
+	for _, v := range unset_vars {
+		if ok, _ := (&EnvIsSetNotEmpty{v}).Validate(); ok {
+			t.Errorf("%v is set", v)
 		}
 	}
 }

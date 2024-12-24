@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 // A rule to simply check if a given environment variable is set
@@ -19,6 +20,24 @@ func (r *EnvIsSet) Validate() (bool, error) {
 
 	if !ok {
 		return false, fmt.Errorf("environment variable %v is not set", r.EnvVar)
+	}
+
+	return true, nil
+}
+
+type EnvIsSetNotEmpty struct {
+	EnvVar string
+}
+
+func (r *EnvIsSetNotEmpty) Validate() (bool, error) {
+	val, ok := os.LookupEnv(r.EnvVar)
+
+	if !ok {
+		return false, fmt.Errorf("environment variable %v is not set", r.EnvVar)
+	}
+
+	if strings.TrimSpace(val) == "" {
+		return false, fmt.Errorf("environment variable %v is set to an empty string \"%v\"", r.EnvVar, val)
 	}
 
 	return true, nil
