@@ -259,7 +259,7 @@ func TestEnvIntegerRangeFail(t *testing.T) {
 	set_vars := map[string]string{
 		"MEDIK_FOO1": "-1",
 		"MEDIK_FOO2": "0",
-		"MEDIK_FOO3": "3",
+		"MEDIK_FOO3": "4",
 	}
 
 	for k, v := range set_vars {
@@ -268,7 +268,7 @@ func TestEnvIntegerRangeFail(t *testing.T) {
 
 	for k := range set_vars {
 		if ok, err := (&EnvIntegerRange{k, 1, 3}).Validate(); ok {
-			t.Errorf("%s is being accepted as an integer in the range [1,3)\n", k)
+			t.Errorf("%s is being accepted as an integer in the range [1,3]\n", k)
 		} else {
 			t.Logf("%v\n", err)
 		}

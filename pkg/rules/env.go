@@ -98,7 +98,7 @@ func (r *EnvInteger) Validate() (bool, error) {
 }
 
 // A rule to check if an environment variable is a number within a range
-// Min is inclusive, Max is exclusive
+// Min and Max are inclusive
 type EnvIntegerRange struct {
 	EnvVar string
 	Min    int
@@ -119,8 +119,8 @@ func (r *EnvIntegerRange) Validate() (bool, error) {
 		return false, fmt.Errorf("environment variable %v has value %v which is not a number", r.EnvVar, val)
 	}
 
-	if num < r.Min || num >= r.Max {
-		return false, fmt.Errorf("environment variable %v has value %v which is not in the int range [%v,%v)", r.EnvVar, val, r.Min, r.Max)
+	if num < r.Min || num > r.Max {
+		return false, fmt.Errorf("environment variable %v has value %v which is not in the int range [%v,%v]", r.EnvVar, val, r.Min, r.Max)
 	}
 
 	return true, nil
