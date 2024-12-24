@@ -189,7 +189,7 @@ func TestEnvOptionFail(t *testing.T) {
 func TestEnvIntegerPass(t *testing.T) {
 	set_vars := map[string]string{
 		"MEDIK_FOO1": "1",
-		"MEDIK_FOO2": "2",
+		"MEDIK_FOO2": "-2",
 		"MEDIK_FOO3": "3",
 	}
 
@@ -242,7 +242,7 @@ func TestEnvFloatPass(t *testing.T) {
 	set_vars := map[string]string{
 		"MEDIK_FOO1": "1.0",
 		"MEDIK_FOO2": "2.0",
-		"MEDIK_FOO3": "3.0",
+		"MEDIK_FOO3": "-3.0",
 	}
 
 	for k, v := range set_vars {
@@ -289,3 +289,4 @@ func TestEnvFloatUnset(t *testing.T) {
 		}
 	}
 }
+
