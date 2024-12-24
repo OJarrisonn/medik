@@ -102,11 +102,10 @@ func TestEnvRegexFail(t *testing.T) {
 	}
 
 	for k := range set_vars {
-		switch _, err := (&EnvRegex{k, regex}).Validate(); err.(type) {
-		case *EnvRegexError:
+		if ok, err := (&EnvRegex{k, regex}).Validate(); ok {
+			t.Errorf("%s was accepted %v\n", k, err)
+		} else {
 			t.Log(err)
-		default:
-			t.Errorf("%s raised an error %v\n", k, err)
 		}
 	}
 
