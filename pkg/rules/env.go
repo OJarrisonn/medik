@@ -277,11 +277,11 @@ type EnvIpAddr struct {
 // ValidateEnvIpAddr checks if an environment variable is set to an IP address (v4 or v6)
 func (r *EnvIpAddr) Validate() (bool, error) {
 	ipv4 := &EnvIpv4Addr{r.EnvVar}
-	
+
 	if ok, _ := ipv4.Validate(); ok {
 		return true, nil
 	}
-	
+
 	ipv6 := &EnvIpv6Addr{r.EnvVar}
 
 	if ok, _ := ipv6.Validate(); ok {
@@ -293,9 +293,9 @@ func (r *EnvIpAddr) Validate() (bool, error) {
 
 // A rule to check if an environment variable is set to a hostname
 type EnvHostname struct {
-	EnvVar string
+	EnvVar           string
 	SpecificProtocol bool
-	Protocol string	
+	Protocol         string
 }
 
 // ValidateEnvHostname checks if an environment variable is set to a hostname
