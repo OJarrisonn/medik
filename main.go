@@ -13,11 +13,9 @@ func main() {
 		"PATH",
 	}
 
-	for _, v := range vars {
-		if ok, _ := (&exams.EnvIsSet{EnvVar: v}).Examinate(); ok {
-			fmt.Printf("%s is set\n", v)
-		} else {
-			fmt.Printf("%s is not set\n", v)
-		}
+	if ok, err := (&exams.EnvIsSet{Vars: vars}).Examinate(); ok {
+		fmt.Printf("%s is set\n", vars)
+	} else {
+		fmt.Printf("%s is not set\n%v", vars, err)
 	}
 }

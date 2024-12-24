@@ -7,21 +7,45 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/OJarrisonn/medik/pkg/config"
 )
 
 // Check if a given environment variable is set
-// 
+//
 // type: env.is-set,
 // vars: []string
 type EnvIsSet struct {
-	EnvVar string
+	Vars []string
+}
+
+func (r *EnvIsSet) Type() string {
+	return "env.is-set"
+}
+
+func (r *EnvIsSet) Parse(config config.Exam) (Exam, error) {
+	if config.Type != r.Type() {
+		return nil, fmt.Errorf("invalid type %v for env.is-set", config.Type)
+	}
+
+	if len(config.Vars) == 0 {
+		return nil, fmt.Errorf("vars is not set for env.is-set")
+	}
+
+	return &EnvIsSet{config.Vars}, nil
 }
 
 func (r *EnvIsSet) Examinate() (bool, error) {
-	_, ok := os.LookupEnv(r.EnvVar)
+	unset := []string{}
 
-	if !ok {
-		return false, fmt.Errorf("environment variable %v is not set", r.EnvVar)
+	for _, v := range r.Vars {
+		if _, ok := os.LookupEnv(v); !ok {
+			unset = append(unset, v)
+		}
+	}
+
+	if len(unset) > 0 {
+		return false, fmt.Errorf("environment variables not set %v", unset)
 	}
 
 	return true, nil
@@ -33,18 +57,49 @@ func (r *EnvIsSet) Examinate() (bool, error) {
 // type: env.not-empty
 // vars: []string
 type EnvIsSetNotEmpty struct {
-	EnvVar string
+	Vars []string
+}
+
+func (r *EnvIsSetNotEmpty) Type() string {
+	return "env.not-empty"
+}
+
+func (r *EnvIsSetNotEmpty) Parse(config config.Exam) (Exam, error) {
+	if config.Type != r.Type() {
+		return nil, fmt.Errorf("invalid type %v for env.not-empty", config.Type)
+	}
+
+	if len(config.Vars) == 0 {
+		return nil, fmt.Errorf("vars is not set for env.not-empty")
+	}
+
+	return &EnvIsSetNotEmpty{config.Vars}, nil
 }
 
 func (r *EnvIsSetNotEmpty) Examinate() (bool, error) {
-	val, ok := os.LookupEnv(r.EnvVar)
+	unset := []string{}
+	invalid := []string{}
 
-	if !ok {
-		return false, fmt.Errorf("environment variable %v is not set", r.EnvVar)
+	for _, v := range r.Vars {
+		if val, ok := os.LookupEnv(v); !ok {
+			unset = append(unset, v)
+		} else if strings.TrimSpace(val) == "" {
+			invalid = append(invalid, v)
+		}
 	}
 
-	if strings.TrimSpace(val) == "" {
-		return false, fmt.Errorf("environment variable %v is set to an empty string \"%v\"", r.EnvVar, val)
+	err := ""
+
+	if len(unset) > 0 {
+		err += fmt.Sprintf("environment variables not set %v\n", unset)
+	}
+
+	if len(invalid) > 0 {
+		err += fmt.Sprintf("environment variables set to empty strings %v\n", invalid)
+	}
+
+	if err != "" {
+		return false, fmt.Errorf("%v", err)
 	}
 
 	return true, nil
@@ -57,25 +112,60 @@ func (r *EnvIsSetNotEmpty) Examinate() (bool, error) {
 // vars: []string,
 // regex: string
 type EnvRegex struct {
-	EnvVar string
-	Regex  string
+	Vars []string
+	Regex  *regexp.Regexp
+}
+
+func (r *EnvRegex) Type() string {
+	return "env.regex"
+}
+
+func (r *EnvRegex) Parse(config config.Exam) (Exam, error) {
+	if config.Type != r.Type() {
+		return nil, fmt.Errorf("invalid type %v for env.regex", config.Type)
+	}
+
+	if len(config.Vars) == 0 {
+		return nil, fmt.Errorf("vars is not set for env.regex")
+	}
+
+	if config.Regex == "" {
+		return nil, fmt.Errorf("regex is not set for env.regex")
+	}
+
+	regexp, rerr := regexp.Compile(config.Regex)
+
+	if rerr != nil {
+		return nil, fmt.Errorf("invalid regex %v for env.regex, %v", config.Regex, rerr)
+	}
+
+	return &EnvRegex{config.Vars, regexp}, nil
 }
 
 func (r *EnvRegex) Examinate() (bool, error) {
-	val, ok := os.LookupEnv(r.EnvVar)
+	unset := []string{}
+	invalid := []string{}
 
-	if !ok {
-		return false, nil
+	for _, v := range r.Vars {
+		if val, ok := os.LookupEnv(v); !ok {
+			unset = append(unset, v)
+		} else if !r.Regex.MatchString(val) {
+			invalid = append(invalid, v)
+		}
+	}
+	
+	err := ""
+
+	if len(unset) > 0 {
+		err += fmt.Sprintf("environment variables not set %v\n", unset)
 	}
 
-	regexp, rerr := regexp.Compile(r.Regex)
-
-	if rerr != nil {
-		return false, rerr
+	if len(invalid) > 0 {
+		err += fmt.Sprintf("environment variables not matching regex %v\n", invalid)
 	}
 
-	if !regexp.MatchString(val) {
-		return false, fmt.Errorf("environment variable %v has value %v which doesn't match %v", r.EnvVar, val, r.Regex)
+	if err != "" {
+		return false, fmt.Errorf("%v", err)
 	}
 
 	return true, nil
@@ -87,47 +177,114 @@ func (r *EnvRegex) Examinate() (bool, error) {
 // vars: []string,
 // options: []string
 type EnvOption struct {
-	EnvVar  string
-	Options []string
+	Vars  []string
+	Options map[string]bool
 }
 
-// TODO: Make faster lookups
-func (r *EnvOption) Examinate() (bool, error) {
-	val, ok := os.LookupEnv(r.EnvVar)
+func (r *EnvOption) Type() string {
+	return "env.options"
+}
 
-	if !ok {
-		return false, nil
+func (r *EnvOption) Parse(config config.Exam) (Exam, error) {
+	if config.Type != r.Type() {
+		return nil, fmt.Errorf("invalid type %v for env.options", config.Type)
 	}
 
-	for _, opt := range r.Options {
-		if val == opt {
-			return true, nil
+	if len(config.Vars) == 0 {
+		return nil, fmt.Errorf("vars is not set for env.options")
+	}
+
+	if len(config.Options) == 0 {
+		return nil, fmt.Errorf("options is not set for env.options")
+	}
+
+	options := make(map[string]bool)
+
+	for _, o := range config.Options {
+		options[o] = true
+	}
+
+	return &EnvOption{config.Vars, options}, nil
+}
+
+func (r *EnvOption) Examinate() (bool, error) {
+	unset := []string{}
+	invalid := []string{}
+	
+	for _, v := range r.Vars {
+		if val, ok := os.LookupEnv(v); !ok {
+			unset = append(unset, v)
+		} else if _, ok := r.Options[val]; !ok {
+			invalid = append(invalid, v)
 		}
 	}
 
-	return false, fmt.Errorf("environment variable %v has value %v which is not one of %v", r.EnvVar, val, r.Options)
+	err := ""
+
+	if len(unset) > 0 {
+		err += fmt.Sprintf("environment variables not set %v\n", unset)
+	}
+
+	if len(invalid) > 0 {
+		err += fmt.Sprintf("environment variables not matching options %v\n", invalid)
+	}
+
+	if err != "" {
+		return false, fmt.Errorf("%v", err)
+	}
+
+	return true, nil
 }
 
 // Check if an environment variable is a number
 // This rule will check if the environment variable is a number
-// 
+//
 // type: env.int,
 // vars: []string
 type EnvInteger struct {
-	EnvVar string
+	Vars []string
+}
+
+func (r *EnvInteger) Type() string {
+	return "env.int"
+}
+
+func (r *EnvInteger) Parse(config config.Exam) (Exam, error) {
+	if config.Type != r.Type() {
+		return nil, fmt.Errorf("invalid type %v for env.int", config.Type)
+	}
+
+	if len(config.Vars) == 0 {
+		return nil, fmt.Errorf("vars is not set for env.int")
+	}
+
+	return &EnvInteger{config.Vars}, nil
 }
 
 func (r *EnvInteger) Examinate() (bool, error) {
-	val, ok := os.LookupEnv(r.EnvVar)
+	unset := []string{}
+	invalid := []string{}
 
-	if !ok {
-		return false, nil
+	for _, v := range r.Vars {
+		if val, ok := os.LookupEnv(v); !ok {
+			unset = append(unset, v)
+		} else if _, err := strconv.Atoi(val); err != nil {
+			invalid = append(invalid, v)
+		}
 	}
 
-	_, err := strconv.Atoi(val)
+	err := ""
 
-	if err != nil {
-		return false, fmt.Errorf("environment variable %v has value %v which is not a number", r.EnvVar, val)
+	if len(unset) > 0 {
+		err += fmt.Sprintf("environment variables not set %v\n", unset)
+	}
+
+	if len(invalid) > 0 {
+		err += fmt.Sprintf("environment variables not set to integer numbers %v\n", invalid)
+	}
+
+	if err != "" {
+		return false, fmt.Errorf("%v", err)
 	}
 
 	return true, nil
@@ -225,7 +382,7 @@ func (r *EnvFloatRange) Examinate() (bool, error) {
 
 // TODO: Add support to point to files that don't exist
 // Check if an environment variable is set to a file that exists
-// 
+//
 // type: env.file,
 // vars: []string
 type EnvFile struct {
@@ -354,8 +511,8 @@ func (r *EnvIpAddr) Examinate() (bool, error) {
 // vars: []string,
 // protocol: string
 type EnvHostname struct {
-	EnvVar           string
-	Protocol         string
+	EnvVar   string
+	Protocol string
 }
 
 func (r *EnvHostname) Examinate() (bool, error) {

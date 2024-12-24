@@ -23,7 +23,7 @@ func TestEnvIsSet(t *testing.T) {
 	}
 
 	for k := range set_vars {
-		ok, err := (&EnvIsSet{EnvVar: k}).Examinate()
+		ok, err := (&EnvIsSet{Vars: k}).Examinate()
 
 		if !ok {
 			t.Errorf("%s is not set\n", k)
@@ -35,7 +35,7 @@ func TestEnvIsSet(t *testing.T) {
 	}
 
 	for _, v := range unset_vars {
-		ok, err := (&EnvIsSet{EnvVar: v}).Examinate()
+		ok, err := (&EnvIsSet{Vars: v}).Examinate()
 
 		if ok {
 			t.Errorf("%s is set\n", v)
