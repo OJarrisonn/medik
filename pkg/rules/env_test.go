@@ -127,3 +127,99 @@ func TestValidateEnvRegexPanic(t *testing.T) {
 
 	t.Logf("%v %T", err, err)
 }
+
+func TestValidateEnvOneOfPass(t *testing.T) {
+	set_vars := map[string]string{
+		"MEDIK_FOO1": "foo1",
+		"MEDIK_FOO2": "foo2",
+		"MEDIK_FOO3": "foo3",
+	}
+
+	options := []string{"foo1", "foo2", "foo3"}
+
+	for k, v := range set_vars {
+		t.Setenv(k, v)
+	}
+
+	for k := range set_vars {
+		if ok, _ := (&ValidateEnvOneOfRule{k, options}).Validate(); !ok {
+			t.Errorf("%s is not set\n", k)
+		}
+	}
+}
+
+func TestValidateEnvOneOfUnset(t *testing.T) {
+	unset_vars := []string{
+		"MEDIK_FOO4",
+		"MEDIK_FOO5",
+		"MEDIK_FOO6",
+	}
+
+	options := []string{"foo1", "foo2", "foo3"}
+
+	for _, v := range unset_vars {
+		if ok, _ := (&ValidateEnvOneOfRule{v, options}).Validate(); ok {
+			t.Errorf("%s is set\n", v)
+		}
+	}
+}
+
+func TestValidateEnvOneOfFail(t *testing.T) {
+	set_vars := map[string]string{
+		"MEDIK_FOO1": "foo4",
+		"MEDIK_FOO2": "foo5",
+		"MEDIK_FOO3": "foo3",
+	}
+
+	options := []string{"foo1", "foo2"}
+
+	for k, v := range set_vars {
+		t.Setenv(k, v)
+	}
+
+	for k := range set_vars {
+		if ok, err := (&ValidateEnvOneOfRule{k, options}).Validate(); ok {
+			t.Errorf("%s is valid\n", k)
+		} else {
+			t.Logf("%v\n", err)
+		}
+	}
+}
+
+func TestValidateEnvIntegerPass(t *testing.T) {
+	set_vars := map[string]string{
+		"MEDIK_FOO1": "1",
+		"MEDIK_FOO2": "2",
+		"MEDIK_FOO3": "3",
+	}
+
+	for k, v := range set_vars {
+		t.Setenv(k, v)
+	}
+
+	for k := range set_vars {
+		if ok, err := (&ValidateEnvIntegerRule{k}).Validate(); !ok {
+			t.Errorf("%s is not set to an integer, %v\n", k, err)
+		}
+	}
+}
+
+func TestValidateEnvIntegerFail(t *testing.T) {
+	set_vars := map[string]string{
+		"MEDIK_FOO1": ".1",
+		"MEDIK_FOO2": "2O",
+		"MEDIK_FOO3": "3f",
+	}
+
+	for k, v := range set_vars {
+		t.Setenv(k, v)
+	}
+
+	for k := range set_vars {
+		if ok, err := (&ValidateEnvIntegerRule{k}).Validate(); ok {
+			t.Errorf("%s is being accepted as an integer integer\n", k)
+		} else {
+			t.Logf("%v\n", err)
+		}
+	}
+}
