@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	neturl "net/url"
 	"os"
 	"regexp"
 	"strconv"
@@ -305,6 +306,145 @@ func (r *EnvDir) Validate() (bool, error) {
 
 	if !stat.IsDir() {
 		return false, &EnvDirError{r.EnvVar, val}
+	}
+
+	return true, nil
+}
+
+type EnvIpv4AddrError struct {
+	EnvVar string
+	Value  string
+}
+
+func (e *EnvIpv4AddrError) Error() string {
+	return fmt.Sprintf("Environment variable %v has value %v which is not an IP address", e.EnvVar, e.Value)
+}
+
+// A rule to check if an environment variable is set to an IP address
+type EnvIpv4Addr struct {
+	EnvVar string
+}
+
+// ValidateEnvIpAddr checks if an environment variable is set to an IP address
+func (r *EnvIpv4Addr) Validate() (bool, error) {
+	val, ok := os.LookupEnv(r.EnvVar)
+
+	if !ok {
+		return false, nil
+	}
+
+	regexp := regexp.MustCompile(`^(\d{1,3}\.){3}\d{1,3}$`)
+	
+	if !regexp.MatchString(val) {
+		return false, &EnvIpv4AddrError{r.EnvVar, val}
+	}
+
+	return true, nil
+}
+
+type EnvIpv6AddrError struct {
+	EnvVar string
+	Value  string
+}
+
+func (e *EnvIpv6AddrError) Error() string {
+	return fmt.Sprintf("Environment variable %v has value %v which is not an IP address", e.EnvVar, e.Value)
+}
+
+// A rule to check if an environment variable is set to an IP address
+type EnvIpv6Addr struct {
+	EnvVar string
+}
+
+// ValidateEnvIpAddr checks if an environment variable is set to an IP address
+func (r *EnvIpv6Addr) Validate() (bool, error) {
+	val, ok := os.LookupEnv(r.EnvVar)
+
+	if !ok {
+		return false, nil
+	}
+
+	regexp := regexp.MustCompile(`^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$`)
+
+	if !regexp.MatchString(val) {
+		return false, &EnvIpv6AddrError{r.EnvVar, val}
+	}
+
+	return true, nil
+}
+
+type EnvIpAddrError struct {
+	EnvVar string
+	Value  string
+}
+
+func (e *EnvIpAddrError) Error() string {
+	return fmt.Sprintf("Environment variable %v has value %v which is not an IP address", e.EnvVar, e.Value)
+}
+
+// A rule to check if an environment variable is set to an IP address
+type EnvIpAddr struct {
+	EnvVar string
+}
+
+// ValidateEnvIpAddr checks if an environment variable is set to an IP address (v4 or v6)
+func (r *EnvIpAddr) Validate() (bool, error) {
+	ipv4 := &EnvIpv4Addr{r.EnvVar}
+	
+	if ok, _ := ipv4.Validate(); ok {
+		return true, nil
+	}
+	
+	ipv6 := &EnvIpv6Addr{r.EnvVar}
+
+	if ok, _ := ipv6.Validate(); ok {
+		return true, nil
+	}
+
+	return false, &EnvIpAddrError{r.EnvVar, os.Getenv(r.EnvVar)}
+}
+
+type EnvHostnameInvalidProtoError struct {
+	Rule *EnvHostname
+	Value  string
+}
+
+func (e *EnvHostnameInvalidProtoError) Error() string {
+	return fmt.Sprintf("Environment variable %v has value %v which is not a valid URL with protocol %v", e.Rule.EnvVar, e.Value, e.Rule.Protocol)
+}
+
+// A rule to check if an environment variable is set to a hostname
+type EnvHostname struct {
+	EnvVar string
+	SpecificProtocol bool
+	Protocol string	
+}
+
+// ValidateEnvHostname checks if an environment variable is set to a hostname
+func (r *EnvHostname) Validate() (bool, error) {
+	val, ok := os.LookupEnv(r.EnvVar)
+
+	if !ok {
+		return false, nil
+	}
+
+	// Check if the hostname is a valid URL
+	return r.validateUrl(val)
+}
+
+func (r *EnvHostname) validateUrl(rawUrl string) (bool, error) {
+	url, err := neturl.Parse(rawUrl)
+
+	if err != nil {
+		return false, err
+	}
+
+	if !r.SpecificProtocol {
+		return true, nil
+	}
+
+	if url.Scheme != r.Protocol {
+		return false, &EnvHostnameInvalidProtoError{r, rawUrl}
 	}
 
 	return true, nil
