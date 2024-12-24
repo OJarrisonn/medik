@@ -133,6 +133,46 @@ func (r *EnvInteger) Validate() (bool, error) {
 }
 
 
+type EnvIntegerRangeError struct {
+	EnvVar string
+	Value  string
+	Min    int
+	Max    int
+}
+
+func (e *EnvIntegerRangeError) Error() string {
+	return fmt.Sprintf("Environment variable %v has value %v which is not in the int range [%v,%v)", e.EnvVar, e.Value, e.Min, e.Max)
+}
+
+// A rule to check if an environment variable is a number within a range
+// Min is inclusive, Max is exclusive
+type EnvIntegerRange struct {
+	EnvVar string
+	Min    int
+	Max    int
+}
+
+// ValidateEnvNumber checks if an environment variable is a number
+func (r *EnvIntegerRange) Validate() (bool, error) {
+	val, ok := os.LookupEnv(r.EnvVar)
+
+	if !ok {
+		return false, nil
+	}
+
+	num, err := strconv.Atoi(val)
+
+	if err != nil {
+		return false, &EnvIntegerError{r.EnvVar, val}
+	}
+
+	if num < r.Min || num >= r.Max {
+		return false, &EnvIntegerRangeError{r.EnvVar, val, r.Min, r.Max}
+	}
+
+	return true, nil
+}
+
 type EnvFloatError struct {
 	EnvVar string
 	Value  string
@@ -159,6 +199,46 @@ func (r *EnvFloat) Validate() (bool, error) {
 
 	if err != nil {
 		return false, &EnvFloatError{r.EnvVar, val}
+	}
+
+	return true, nil
+}
+
+type EnvFloatRangeError struct {
+	EnvVar string
+	Value  string
+	Min    float64
+	Max    float64
+}
+
+func (e *EnvFloatRangeError) Error() string {
+	return fmt.Sprintf("Environment variable %v has value %v which is not in the float range [%v,%v]", e.EnvVar, e.Value, e.Min, e.Max)
+}
+
+// A rule to check if an environment variable is a number within a range
+// Min and Max are inclusive
+type EnvFloatRange struct {
+	EnvVar string
+	Min    float64
+	Max    float64
+}
+
+// ValidateEnvNumber checks if an environment variable is a number
+func (r *EnvFloatRange) Validate() (bool, error) {
+	val, ok := os.LookupEnv(r.EnvVar)
+
+	if !ok {
+		return false, nil
+	}
+
+	num, err := strconv.ParseFloat(val, 64)
+
+	if err != nil {
+		return false, &EnvFloatError{r.EnvVar, val}
+	}
+
+	if num < r.Min || num > r.Max {
+		return false, &EnvFloatRangeError{r.EnvVar, val, r.Min, r.Max}
 	}
 
 	return true, nil
