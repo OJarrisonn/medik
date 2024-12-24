@@ -243,3 +243,69 @@ func (r *EnvFloatRange) Validate() (bool, error) {
 
 	return true, nil
 }
+
+type EnvFileError struct {
+	EnvVar string
+	Value  string
+}
+
+func (e *EnvFileError) Error() string {
+	return fmt.Sprintf("Environment variable %v has value %v which is not a file", e.EnvVar, e.Value)
+}
+
+// A rule to check if an environment variable is set to a file that exists
+type EnvFile struct {
+	EnvVar string
+}
+
+// ValidateEnvFile checks if an environment variable is set to a file that exists
+func (r *EnvFile) Validate() (bool, error) {
+	val, ok := os.LookupEnv(r.EnvVar)
+
+	if !ok {
+		return false, nil
+	}
+
+	_, err := os.Stat(val)
+
+	if err != nil {
+		return false, &EnvFileError{r.EnvVar, val}
+	}
+
+	return true, nil
+}
+
+type EnvDirError struct {
+	EnvVar string
+	Value  string
+}
+
+func (e *EnvDirError) Error() string {
+	return fmt.Sprintf("Environment variable %v has value %v which is not a directory", e.EnvVar, e.Value)
+}
+
+// A rule to check if an environment variable is set to a directory that exists
+type EnvDir struct {
+	EnvVar string
+}
+
+// ValidateEnvDir checks if an environment variable is set to a directory that exists
+func (r *EnvDir) Validate() (bool, error) {
+	val, ok := os.LookupEnv(r.EnvVar)
+
+	if !ok {
+		return false, nil
+	}
+
+	stat, err := os.Stat(val)
+
+	if err != nil {
+		return false, &EnvDirError{r.EnvVar, val}
+	}
+
+	if !stat.IsDir() {
+		return false, &EnvDirError{r.EnvVar, val}
+	}
+
+	return true, nil
+}

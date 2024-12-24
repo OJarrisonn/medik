@@ -428,3 +428,61 @@ func TestEnvFloatRangeErrorUnset(t *testing.T) {
 		}
 	}
 }
+
+func TestEnvFilePass(t *testing.T) {
+	t.Setenv("MEDIK_FOO1", "/etc/passwd")
+
+	if ok, err := (&EnvFile{"MEDIK_FOO1"}).Validate(); !ok {
+		t.Errorf("MEDIK_FOO1 is not set to a file, %v\n", err)
+	}
+}
+
+func TestEnvFileFail(t *testing.T) {
+	t.Setenv("MEDIK_FOO1", "/this/file/does/not/exist/at/all/dingle/bell/beep/boop/foo/bar/baz")
+
+	if ok, err := (&EnvFile{"MEDIK_FOO1"}).Validate(); ok {
+		t.Errorf("MEDIK_FOO1 is being accepted as a file\n")
+	} else {
+		t.Logf("%v\n", err)
+	}
+}
+
+func TestEnvFileUnset(t *testing.T) {
+	if ok, _ := (&EnvFile{"MEDIK_FOO4"}).Validate(); ok {
+		t.Errorf("MEDIK_FOO4 is set\n")
+	}
+}
+
+func TestEnvDirPass(t *testing.T) {
+	t.Setenv("MEDIK_FOO1", "/etc")
+
+	if ok, err := (&EnvDir{"MEDIK_FOO1"}).Validate(); !ok {
+		t.Errorf("MEDIK_FOO1 is not set to a directory, %v\n", err)
+	}
+}
+
+func TestEnvDirFail(t *testing.T) {
+	t.Setenv("MEDIK_FOO1", "/this/directory/does/not/exist/at/all/dingle/bell/beep/boop/foo/bar/baz")
+
+	if ok, err := (&EnvDir{"MEDIK_FOO1"}).Validate(); ok {
+		t.Errorf("MEDIK_FOO1 is being accepted as a directory\n")
+	} else {
+		t.Logf("%v\n", err)
+	}
+}
+
+func TestEnvDirNotADir(t *testing.T) {
+	t.Setenv("MEDIK_FOO1", "/etc/passwd")
+
+	if ok, err := (&EnvDir{"MEDIK_FOO1"}).Validate(); ok {
+		t.Errorf("MEDIK_FOO1 is being accepted as a directory\n")
+	} else {
+		t.Logf("%v\n", err)
+	}
+}
+
+func TestEnvDirUnset(t *testing.T) {
+	if ok, _ := (&EnvDir{"MEDIK_FOO4"}).Validate(); ok {
+		t.Errorf("MEDIK_FOO4 is set\n")
+	}
+}
