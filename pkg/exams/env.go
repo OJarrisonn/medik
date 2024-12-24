@@ -1,4 +1,4 @@
-package rules
+package exams
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ type EnvIsSet struct {
 	EnvVar string
 }
 
-func (r *EnvIsSet) Validate() (bool, error) {
+func (r *EnvIsSet) Examinate() (bool, error) {
 	_, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -29,7 +29,7 @@ type EnvIsSetNotEmpty struct {
 	EnvVar string
 }
 
-func (r *EnvIsSetNotEmpty) Validate() (bool, error) {
+func (r *EnvIsSetNotEmpty) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -50,7 +50,7 @@ type EnvRegex struct {
 }
 
 // ValidateEnvRegex checks if an environment variable is set and matches a regex
-func (r *EnvRegex) Validate() (bool, error) {
+func (r *EnvRegex) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -78,7 +78,7 @@ type EnvOption struct {
 
 // ValidateEnvOneOf checks if an environment variable is set and matches one of a list of possible values
 // TODO: Make faster lookups
-func (r *EnvOption) Validate() (bool, error) {
+func (r *EnvOption) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -100,7 +100,7 @@ type EnvInteger struct {
 }
 
 // ValidateEnvNumber checks if an environment variable is a number
-func (r *EnvInteger) Validate() (bool, error) {
+func (r *EnvInteger) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -125,7 +125,7 @@ type EnvIntegerRange struct {
 }
 
 // ValidateEnvNumber checks if an environment variable is a number
-func (r *EnvIntegerRange) Validate() (bool, error) {
+func (r *EnvIntegerRange) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -151,7 +151,7 @@ type EnvFloat struct {
 }
 
 // ValidateEnvNumber checks if an environment variable is a number
-func (r *EnvFloat) Validate() (bool, error) {
+func (r *EnvFloat) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -176,7 +176,7 @@ type EnvFloatRange struct {
 }
 
 // ValidateEnvNumber checks if an environment variable is a number
-func (r *EnvFloatRange) Validate() (bool, error) {
+func (r *EnvFloatRange) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -202,7 +202,7 @@ type EnvFile struct {
 }
 
 // ValidateEnvFile checks if an environment variable is set to a file that exists
-func (r *EnvFile) Validate() (bool, error) {
+func (r *EnvFile) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -224,7 +224,7 @@ type EnvDir struct {
 }
 
 // ValidateEnvDir checks if an environment variable is set to a directory that exists
-func (r *EnvDir) Validate() (bool, error) {
+func (r *EnvDir) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -250,7 +250,7 @@ type EnvIpv4Addr struct {
 }
 
 // ValidateEnvIpAddr checks if an environment variable is set to an IP address
-func (r *EnvIpv4Addr) Validate() (bool, error) {
+func (r *EnvIpv4Addr) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -272,7 +272,7 @@ type EnvIpv6Addr struct {
 }
 
 // ValidateEnvIpAddr checks if an environment variable is set to an IP address
-func (r *EnvIpv6Addr) Validate() (bool, error) {
+func (r *EnvIpv6Addr) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
@@ -294,16 +294,16 @@ type EnvIpAddr struct {
 }
 
 // ValidateEnvIpAddr checks if an environment variable is set to an IP address (v4 or v6)
-func (r *EnvIpAddr) Validate() (bool, error) {
+func (r *EnvIpAddr) Examinate() (bool, error) {
 	ipv4 := &EnvIpv4Addr{r.EnvVar}
 
-	if ok, _ := ipv4.Validate(); ok {
+	if ok, _ := ipv4.Examinate(); ok {
 		return true, nil
 	}
 
 	ipv6 := &EnvIpv6Addr{r.EnvVar}
 
-	if ok, _ := ipv6.Validate(); ok {
+	if ok, _ := ipv6.Examinate(); ok {
 		return true, nil
 	}
 
@@ -318,7 +318,7 @@ type EnvHostname struct {
 }
 
 // ValidateEnvHostname checks if an environment variable is set to a hostname
-func (r *EnvHostname) Validate() (bool, error) {
+func (r *EnvHostname) Examinate() (bool, error) {
 	val, ok := os.LookupEnv(r.EnvVar)
 
 	if !ok {
