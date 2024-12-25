@@ -11,13 +11,13 @@ import (
 
 func TestEnvParsersCollection(t *testing.T) {
 	// Inexistent parser
-	parser, ok := EnvParser("inexistent")
+	parser, ok := GetParser("inexistent")
 
 	assert.Nil(t, parser)
 	assert.False(t, ok)
 
 	// Existing parsers
-	parser, ok = EnvParser("is-set")
+	parser, ok = GetParser("is-set")
 
 	assert.NotNil(t, parser)
 	assert.True(t, ok)

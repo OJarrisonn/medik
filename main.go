@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/OJarrisonn/medik/pkg/config"
-	"github.com/OJarrisonn/medik/pkg/exams"
+	"github.com/OJarrisonn/medik/pkg/parse"
 )
 
 func main() {
@@ -31,17 +31,17 @@ func main() {
 	for _, v := range medik.Vitals {
 		ty := v.Type
 		fmt.Printf("type: %s\n", ty)
-		parse, ok := exams.Parser(ty)
+		parse, ok := parse.GetExamParser(ty)
 
 		if !ok {
-			fmt.Printf("failed to find parser for type: %s", ty)
+			fmt.Printf("failed to find parser for type: %s\n", ty)
 			continue
 		}
 
 		exam, err := parse(v)
 
 		if err != nil {
-			fmt.Printf("failed to parse exam: %v", err)
+			fmt.Printf("failed to parse exam: %v\n", err)
 			continue
 		}
 
@@ -50,7 +50,7 @@ func main() {
 		enforced, err := exam.Examinate()
 
 		if err != nil {
-			fmt.Printf("failed to examinate: %v", err)
+			fmt.Printf("failed to examinate: %v\n", err)
 			continue
 		}
 

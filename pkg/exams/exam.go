@@ -2,21 +2,19 @@
 package exams
 
 import (
-	"strings"
-
 	"github.com/OJarrisonn/medik/pkg/config"
 )
-
-type ExamParser func(config config.Exam) (Exam, error)
 
 // Interface that describes a rule
 type Exam interface {
 	// Type returns the type of the exam
 	// This is used to parse the config.Exam by selecting the correct exam parser
+	// This method is always called on a zero value of the implementing struct
 	Type() string
 
 	// Try parses an []exams.Exam from a config.Exam
 	// Returns an error if the config.Exam is invalid
+	// This method is always called on a zero value of the implementing struct
 	Parse(config config.Exam) (Exam, error)
 
 	// Examinate checks if a rule is being enforced
@@ -25,24 +23,15 @@ type Exam interface {
 	Examinate() (bool, error)
 }
 
-// Parser returns an ExamParser for the given type
-// A type is a string in the format of "category.kind"
-// Returns a bool indicating if the parser was found
-func Parser(t string) (ExamParser, bool) {
-	cat, _, _ := strings.Cut(t, ".")
-
-	switch cat {
-	default:
-		return nil, false
-	}
-}
-
-func GetParserForType[E Exam]() ExamParser {
+// Returns the Parse method from an Exam
+// Since this method is decoupled from the values stored in the struct
+func ExamParse[E Exam]() func(config config.Exam) (Exam, error) {
 	var e E
 	return e.Parse
 }
 
-func GetTypeForType[E Exam]() string {
+// Returns the Type string from an Exam
+func ExamType[E Exam]() string {
 	var e E
 	return e.Type()
 }
