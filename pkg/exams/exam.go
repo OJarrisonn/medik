@@ -36,11 +36,14 @@ func ExamType[E Exam]() string {
 	return e.Type()
 }
 
+// An error to describe a strange scenario where the wrong exam parser was called
+// The parser to be called is identified by Type field of an Exam, this becomes the Source field
+// The Using field is the Type of the Exam that was called
 type WrongExamParserError struct {
-	Got,
-	Expected string
+	Source,
+	Using string
 }
 
 func (e *WrongExamParserError) Error() string {
-	return "wrong exam parser called expected " + e.Expected + " got " + e.Got
+	return "wrong exam parser: using " + e.Using + " parser for a " + e.Source + " exam"
 }

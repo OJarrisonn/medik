@@ -22,7 +22,7 @@ func (r *File) Type() string {
 
 func (r *File) Parse(config config.Exam) (exams.Exam, error) {
 	if config.Type != r.Type() {
-		return nil, &exams.WrongExamParserError{Got: config.Type, Expected: r.Type()}
+		return nil, &exams.WrongExamParserError{Source: config.Type, Using: r.Type()}
 	}
 
 	if len(config.Vars) == 0 {

@@ -2,7 +2,6 @@ package env
 
 import (
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/OJarrisonn/medik/pkg/config"
@@ -17,7 +16,7 @@ func TestEnvParsersCollection(t *testing.T) {
 	assert.False(t, ok)
 
 	// Existing parsers
-	parser, ok = GetParser("is-set")
+	parser, ok = GetParser("env.is-set")
 
 	assert.NotNil(t, parser)
 	assert.True(t, ok)
@@ -49,11 +48,18 @@ func TestEnvParsersContainsAll(t *testing.T) {
 		(&Hostname{}).Type(),
 	}
 
-	for i, k := range known {
-		known[i], _ = strings.CutPrefix(k, "env.")
-	}
-
 	assert.ElementsMatch(t, known, registered)
+}
+
+func TestEnvWrongParser(t *testing.T) {
+	parse, ok := GetParser("env.is-set")
+
+	assert.True(t, ok)
+
+	_, err := parse(config.Exam{Type: "invalid"})
+
+	assert.Error(t, err)
+	assert.Equal(t, "wrong exam parser: using env.is-set parser for a invalid exam", err.Error())
 }
 
 func TestEnvIsSet(t *testing.T) {
