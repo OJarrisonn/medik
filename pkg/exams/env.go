@@ -11,6 +11,39 @@ import (
 	"github.com/OJarrisonn/medik/pkg/config"
 )
 
+// Function to get a parser for a given type `env.*`
+// The type is the part after `env.` in the exam type
+// Returns the parser and a boolean indicating if the parser was found
+func Parser(ty string) (ExamParser, bool) {
+	if parser, ok := parsers[ty]; ok {
+		return parser, ok
+	}
+
+	return nil, false
+}
+
+var parsers = map[string]ExamParser {
+	"is-set": getParser[*EnvIsSet](),
+	"not-empty": getParser[*EnvIsSetNotEmpty](),
+	"regex": getParser[*EnvRegex](),
+	"options": getParser[*EnvOption](),
+	"int": getParser[*EnvInteger](),
+	"int-range": getParser[*EnvIntegerRange](),
+	"float": getParser[*EnvFloat](),
+	"float-range": getParser[*EnvFloatRange](),
+	"file": getParser[*EnvFile](),
+	"dir": getParser[*EnvDir](),
+	"ipv4": getParser[*EnvIpv4Addr](),
+	"ipv6": getParser[*EnvIpv6Addr](),
+	"ip": getParser[*EnvIpAddr](),
+	"hostname": getParser[*EnvHostname](),
+}
+
+func getParser[E Exam]() ExamParser {
+	var e E
+	return e.Parse
+}
+
 // Check if a given environment variable is set
 //
 // type: env.is-set,
@@ -298,26 +331,70 @@ func (r *EnvInteger) Examinate() (bool, error) {
 // min: int,
 // max: int
 type EnvIntegerRange struct {
-	EnvVar string
+	Vars []string
 	Min    int
 	Max    int
 }
 
+func (r *EnvIntegerRange) Type() string {
+	return "env.int-range"
+}
+
+func (r *EnvIntegerRange) Parse(config config.Exam) (Exam, error) {
+	if config.Type != r.Type() {
+		return nil, fmt.Errorf("invalid type %v for env.int-range", config.Type)
+	}
+
+	if len(config.Vars) == 0 {
+		return nil, fmt.Errorf("vars is not set for env.int-range")
+	}
+
+	switch config.Min.(type) {
+	case int:
+	default:
+		return nil, fmt.Errorf("min is not an integer for env.int-range")
+	}
+
+	switch config.Max.(type) {
+	case int:
+	default:
+		return nil, fmt.Errorf("max is not an integer for env.int-range")
+	}
+
+	return &EnvIntegerRange{config.Vars, config.Min.(int), config.Max.(int)}, nil
+}
+
 func (r *EnvIntegerRange) Examinate() (bool, error) {
-	val, ok := os.LookupEnv(r.EnvVar)
+	unset := []string{}
+	not_integer := []string{}
+	out_of_bound := []string{}
 
-	if !ok {
-		return false, nil
+	for _, v := range r.Vars {
+		if val, ok := os.LookupEnv(v); !ok {
+			unset = append(unset, v)
+		} else if num, err := strconv.Atoi(val); err != nil {
+			not_integer = append(not_integer, v)
+		} else if num < r.Min || num > r.Max {
+			out_of_bound = append(out_of_bound, v)
+		}
 	}
 
-	num, err := strconv.Atoi(val)
+	err := ""
 
-	if err != nil {
-		return false, fmt.Errorf("environment variable %v has value %v which is not a number", r.EnvVar, val)
+	if len(unset) > 0 {
+		err += fmt.Sprintf("environment variables not set %v\n", unset)
 	}
 
-	if num < r.Min || num > r.Max {
-		return false, fmt.Errorf("environment variable %v has value %v which is not in the int range [%v,%v]", r.EnvVar, val, r.Min, r.Max)
+	if len(not_integer) > 0 {
+		err += fmt.Sprintf("environment variables not set to integer numbers %v\n", not_integer)
+	}
+
+	if len(out_of_bound) > 0 {
+		err += fmt.Sprintf("environment variables not in the integer range [%v,%v] %v\n", r.Min, r.Max, out_of_bound)
+	}
+
+	if err != "" {
+		return false, fmt.Errorf("%v", err)
 	}
 
 	return true, nil
@@ -328,20 +405,49 @@ func (r *EnvIntegerRange) Examinate() (bool, error) {
 // type: env.float,
 // vars: []string
 type EnvFloat struct {
-	EnvVar string
+	Vars []string
+}
+
+func (r *EnvFloat) Type() string {
+	return "env.float"
+}
+
+func (r *EnvFloat) Parse(config config.Exam) (Exam, error) {
+	if config.Type != r.Type() {
+		return nil, fmt.Errorf("invalid type %v for env.float", config.Type)
+	}
+
+	if len(config.Vars) == 0 {
+		return nil, fmt.Errorf("vars is not set for env.float")
+	}
+
+	return &EnvFloat{config.Vars}, nil
 }
 
 func (r *EnvFloat) Examinate() (bool, error) {
-	val, ok := os.LookupEnv(r.EnvVar)
+	unset := []string{}
+	not_float := []string{}
 
-	if !ok {
-		return false, nil
+	for _, v := range r.Vars {
+		if val, ok := os.LookupEnv(v); !ok {
+			unset = append(unset, v)
+		} else if _, err := strconv.ParseFloat(val, 64); err != nil {
+			not_float = append(not_float, v)
+		}
 	}
 
-	_, err := strconv.ParseFloat(val, 64)
+	err := ""
 
-	if err != nil {
-		return false, fmt.Errorf("environment variable %v has value %v which is not a float", r.EnvVar, val)
+	if len(unset) > 0 {
+		err += fmt.Sprintf("environment variables not set %v\n", unset)
+	}
+
+	if len(not_float) > 0 {
+		err += fmt.Sprintf("environment variables not set to float numbers %v\n", not_float)
+	}
+
+	if err != "" {
+		return false, fmt.Errorf("%v", err)
 	}
 
 	return true, nil
@@ -355,51 +461,126 @@ func (r *EnvFloat) Examinate() (bool, error) {
 // min: float,
 // max: float
 type EnvFloatRange struct {
-	EnvVar string
-	Min    float64
-	Max    float64
+	Vars []string
+	Min  float64
+	Max  float64
+}
+
+func (r *EnvFloatRange) Type() string {
+	return "env.float-range"
+}
+
+func (r *EnvFloatRange) Parse(config config.Exam) (Exam, error) {
+	if config.Type != r.Type() {
+		return nil, fmt.Errorf("invalid type %v for env.float-range", config.Type)
+	}
+
+	if len(config.Vars) == 0 {
+		return nil, fmt.Errorf("vars is not set for env.float-range")
+	}
+
+	switch config.Min.(type) {
+	case float64:
+	default:
+		return nil, fmt.Errorf("min is not a float for env.float-range")
+	}
+
+	switch config.Max.(type) {
+	case float64:
+	default:
+		return nil, fmt.Errorf("max is not a float for env.float-range")
+	}
+
+	return &EnvFloatRange{config.Vars, config.Min.(float64), config.Max.(float64)}, nil
 }
 
 func (r *EnvFloatRange) Examinate() (bool, error) {
-	val, ok := os.LookupEnv(r.EnvVar)
+	unset := []string{}
+	out_of_bound := []string{}
+	not_float := []string{}
 
-	if !ok {
-		return false, nil
+	for _, v := range r.Vars {
+		val, ok := os.LookupEnv(v)
+
+		if !ok {
+			unset = append(unset, v)
+		} else if num, err := strconv.ParseFloat(val, 64); err != nil {
+			not_float = append(not_float, v)
+		} else if num < r.Min || num > r.Max {
+			out_of_bound = append(out_of_bound, v)
+		}
 	}
 
-	num, err := strconv.ParseFloat(val, 64)
+	err := ""
 
-	if err != nil {
-		return false, fmt.Errorf("environment variable %v has value %v which is not a float", r.EnvVar, val)
+	if len(unset) > 0 {
+		err += fmt.Sprintf("environment variables not set %v\n", unset)
 	}
 
-	if num < r.Min || num > r.Max {
-		return false, fmt.Errorf("environment variable %v has value %v which is not in the float range [%v,%v]", r.EnvVar, val, r.Min, r.Max)
+	if len(not_float) > 0 {
+		err += fmt.Sprintf("environment variables not set to float numbers %v\n", not_float)
+	}
+
+	if len(out_of_bound) > 0 {
+		err += fmt.Sprintf("environment variables not in the float range [%v,%v] %v\n", r.Min, r.Max, out_of_bound)
+	}
+
+	if err != "" {
+		return false, fmt.Errorf("%v", err)
 	}
 
 	return true, nil
 }
 
-// TODO: Add support to point to files that don't exist
 // Check if an environment variable is set to a file that exists
 //
 // type: env.file,
 // vars: []string
 type EnvFile struct {
-	EnvVar string
+	Vars []string
+}
+
+func (r *EnvFile) Type() string {
+	return "env.file"
+}
+
+func (r *EnvFile) Parse(config config.Exam) (Exam, error) {
+	if config.Type != r.Type() {
+		return nil, fmt.Errorf("invalid type %v for env.file", config.Type)
+	}
+
+	if len(config.Vars) == 0 {
+		return nil, fmt.Errorf("vars is not set for env.file")
+	}
+
+	return &EnvFile{config.Vars}, nil
 }
 
 func (r *EnvFile) Examinate() (bool, error) {
-	val, ok := os.LookupEnv(r.EnvVar)
+	unset := []string{}
+	invalid := []string{}
 
-	if !ok {
-		return false, nil
+	for _, v := range r.Vars {
+		val, ok := os.LookupEnv(v)
+		if !ok {
+			unset = append(unset, v)
+		} else if _, err := os.Stat(val); err != nil {
+			invalid = append(invalid, v)
+		}
 	}
 
-	_, err := os.Stat(val)
+	err := ""
 
-	if err != nil {
-		return false, fmt.Errorf("environment variable %v has value %v which is not a file, %v", r.EnvVar, val, err)
+	if len(unset) > 0 {
+		err += fmt.Sprintf("environment variables not set %v\n", unset)
+	}
+
+	if len(invalid) > 0 {
+		err += fmt.Sprintf("environment variables not pointing to valid files %v\n", invalid)
+	}
+
+	if err != "" {
+		return false, fmt.Errorf("%v", err)
 	}
 
 	return true, nil
@@ -410,72 +591,160 @@ func (r *EnvFile) Examinate() (bool, error) {
 // type: env.dir,
 // vars: []string
 type EnvDir struct {
-	EnvVar string
+	Vars []string
+}
+
+func (r *EnvDir) Type() string {
+	return "env.dir"
+}
+
+func (r *EnvDir) Parse(config config.Exam) (Exam, error) {
+	if config.Type != r.Type() {
+		return nil, fmt.Errorf("invalid type %v for env.dir", config.Type)
+	}
+
+	if len(config.Vars) == 0 {
+		return nil, fmt.Errorf("vars is not set for env.dir")
+	}
+
+	return &EnvDir{config.Vars}, nil
 }
 
 func (r *EnvDir) Examinate() (bool, error) {
-	val, ok := os.LookupEnv(r.EnvVar)
+	unset := []string{}
+	invalid := []string{}
 
-	if !ok {
-		return false, nil
+	for _, v := range r.Vars {
+		val, ok := os.LookupEnv(v)
+		if !ok {
+			unset = append(unset, v)
+		} else if stat, err := os.Stat(val); err != nil || !stat.IsDir() {
+			invalid = append(invalid, v)
+		}
 	}
 
-	stat, err := os.Stat(val)
+	err := ""
 
-	if err != nil {
-		return false, fmt.Errorf("environment variable %v has value %v which is not a directory, %v", r.EnvVar, val, err)
+	if len(unset) > 0 {
+		err += fmt.Sprintf("environment variables not set %v\n", unset)
 	}
 
-	if !stat.IsDir() {
-		return false, fmt.Errorf("environment variable %v has value %v which is not a directory", r.EnvVar, val)
+	if len(invalid) > 0 {
+		err += fmt.Sprintf("environment variables not pointing to valid directories %v\n", invalid)
+	}
+
+	if err != "" {
+		return false, fmt.Errorf("%v", err)
 	}
 
 	return true, nil
 }
 
-// Check if an environment variable is set to an IP address
+// Check if an environment variable is set to an IPv4 address
 //
 // type: env.ipv4,
 // vars: []string
 type EnvIpv4Addr struct {
-	EnvVar string
+	Vars []string
+}
+
+func (r *EnvIpv4Addr) Type() string {
+	return "env.ipv4"
+}
+
+func (r *EnvIpv4Addr) Parse(config config.Exam) (Exam, error) {
+	if config.Type != r.Type() {
+		return nil, fmt.Errorf("invalid type %v for env.ipv4", config.Type)
+	}
+
+	if len(config.Vars) == 0 {
+		return nil, fmt.Errorf("vars is not set for env.ipv4")
+	}
+
+	return &EnvIpv4Addr{config.Vars}, nil
 }
 
 func (r *EnvIpv4Addr) Examinate() (bool, error) {
-	val, ok := os.LookupEnv(r.EnvVar)
-
-	if !ok {
-		return false, nil
-	}
-
+	unset := []string{}
+	invalid := []string{}
 	regexp := regexp.MustCompile(`^(\d{1,3}\.){3}\d{1,3}$`)
 
-	if !regexp.MatchString(val) {
-		return false, fmt.Errorf("environment variable %v has value %v which is not an IPv4 address", r.EnvVar, val)
+	for _, v := range r.Vars {
+		val, ok := os.LookupEnv(v)
+		if !ok {
+			unset = append(unset, v)
+		} else if !regexp.MatchString(val) {
+			invalid = append(invalid, v)
+		}
+	}
+
+	err := ""
+
+	if len(unset) > 0 {
+		err += fmt.Sprintf("environment variables not set %v\n", unset)
+	}
+
+	if len(invalid) > 0 {
+		err += fmt.Sprintf("environment variables not set to valid IPv4 addresses %v\n", invalid)
+	}
+
+	if err != "" {
+		return false, fmt.Errorf("%v", err)
 	}
 
 	return true, nil
 }
 
-// Check if an environment variable is set to an IP address
+// Check if an environment variable is set to an IPv6 address
 //
 // type: env.ipv6,
 // vars: []string
 type EnvIpv6Addr struct {
-	EnvVar string
+	Vars []string
+}
+
+func (r *EnvIpv6Addr) Type() string {
+	return "env.ipv6"
+}
+
+func (r *EnvIpv6Addr) Parse(config config.Exam) (Exam, error) {
+	if config.Type != r.Type() {
+		return nil, fmt.Errorf("invalid type %v for env.ipv6", config.Type)
+	}
+
+	if len(config.Vars) == 0 {
+		return nil, fmt.Errorf("vars is not set for env.ipv6")
+	}
+
+	return &EnvIpv6Addr{config.Vars}, nil
 }
 
 func (r *EnvIpv6Addr) Examinate() (bool, error) {
-	val, ok := os.LookupEnv(r.EnvVar)
-
-	if !ok {
-		return false, nil
-	}
-
+	unset := []string{}
+	invalid := []string{}
 	regexp := regexp.MustCompile(`^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$`)
 
-	if !regexp.MatchString(val) {
-		return false, fmt.Errorf("environment variable %v has value %v which is not an IPv6 address", r.EnvVar, val)
+	for _, v := range r.Vars {
+		val, ok := os.LookupEnv(v)
+		if !ok {
+			unset = append(unset, v)
+		} else if !regexp.MatchString(val) {
+			invalid = append(invalid, v)
+		}
+	}
+
+	err := ""
+
+	if len(unset) > 0 {
+		err += fmt.Sprintf("environment variables not set %v\n", unset)
+	}
+
+	if len(invalid) > 0 {
+		err += fmt.Sprintf("environment variables not set to valid IPv6 addresses %v\n", invalid)
+	}
+
+	if err != "" {
+		return false, fmt.Errorf("%v", err)
 	}
 
 	return true, nil
@@ -486,23 +755,56 @@ func (r *EnvIpv6Addr) Examinate() (bool, error) {
 // type: env.ip,
 // vars: []string
 type EnvIpAddr struct {
-	EnvVar string
+	Vars []string
 }
 
+func (r *EnvIpAddr) Type() string {
+	return "env.ip"
+}
+
+func (r *EnvIpAddr) Parse(config config.Exam) (Exam, error) {
+	if config.Type != r.Type() {
+		return nil, fmt.Errorf("invalid type %v for env.ip", config.Type)
+	}
+
+	if len(config.Vars) == 0 {
+		return nil, fmt.Errorf("vars is not set for env.ip")
+	}
+
+	return &EnvIpAddr{config.Vars}, nil
+}
+
+// TODO: Refactor this
 func (r *EnvIpAddr) Examinate() (bool, error) {
-	ipv4 := &EnvIpv4Addr{r.EnvVar}
+	unset := []string{}
+	invalid := []string{}
 
-	if ok, _ := ipv4.Examinate(); ok {
-		return true, nil
+	for _, v := range r.Vars {
+		ipv4 := &EnvIpv4Addr{Vars: []string{v}}
+		ipv6 := &EnvIpv6Addr{Vars: []string{v}}
+
+		if ok, _ := ipv4.Examinate(); !ok {
+			if ok, _ := ipv6.Examinate(); !ok {
+				invalid = append(invalid, v)
+			}
+		}
 	}
 
-	ipv6 := &EnvIpv6Addr{r.EnvVar}
+	err := ""
 
-	if ok, _ := ipv6.Examinate(); ok {
-		return true, nil
+	if len(unset) > 0 {
+		err += fmt.Sprintf("environment variables not set %v\n", unset)
 	}
 
-	return false, fmt.Errorf("environment variable %v has value %v which is not an IP address", r.EnvVar, os.Getenv(r.EnvVar))
+	if len(invalid) > 0 {
+		err += fmt.Sprintf("environment variables not set to valid IP addresses %v\n", invalid)
+	}
+
+	if err != "" {
+		return false, fmt.Errorf("%v", err)
+	}
+
+	return true, nil
 }
 
 // A rule to check if an environment variable is set to a hostname
@@ -511,24 +813,58 @@ func (r *EnvIpAddr) Examinate() (bool, error) {
 // vars: []string,
 // protocol: string
 type EnvHostname struct {
-	EnvVar   string
+	Vars     []string
 	Protocol string
 }
 
-func (r *EnvHostname) Examinate() (bool, error) {
-	val, ok := os.LookupEnv(r.EnvVar)
+func (r *EnvHostname) Type() string {
+	return "env.hostname"
+}
 
-	if !ok {
-		return false, nil
+func (r *EnvHostname) Parse(config config.Exam) (Exam, error) {
+	if config.Type != r.Type() {
+		return nil, fmt.Errorf("invalid type %v for env.hostname", config.Type)
 	}
 
-	// Check if the hostname is a valid URL
-	return r.validateUrl(val)
+	if len(config.Vars) == 0 {
+		return nil, fmt.Errorf("vars is not set for env.hostname")
+	}
+
+	return &EnvHostname{config.Vars, config.Protocol}, nil
+}
+
+func (r *EnvHostname) Examinate() (bool, error) {
+	unset := []string{}
+	invalid := []string{}
+
+	for _, v := range r.Vars {
+		val, ok := os.LookupEnv(v)
+		if !ok {
+			unset = append(unset, v)
+		} else if ok, _ := r.validateUrl(val); !ok {
+			invalid = append(invalid, v)
+		}
+	}
+
+	err := ""
+
+	if len(unset) > 0 {
+		err += fmt.Sprintf("environment variables not set %v\n", unset)
+	}
+
+	if len(invalid) > 0 {
+		err += fmt.Sprintf("environment variables not set to valid hostnames %v\n", invalid)
+	}
+
+	if err != "" {
+		return false, fmt.Errorf("%v", err)
+	}
+
+	return true, nil
 }
 
 func (r *EnvHostname) validateUrl(rawUrl string) (bool, error) {
 	url, err := neturl.Parse(rawUrl)
-
 	if err != nil {
 		return false, err
 	}
@@ -538,7 +874,7 @@ func (r *EnvHostname) validateUrl(rawUrl string) (bool, error) {
 	}
 
 	if url.Scheme != r.Protocol {
-		return false, fmt.Errorf("environment variable %v has value %v which is not a valid URL with protocol %v", r.EnvVar, rawUrl, r.Protocol)
+		return false, fmt.Errorf("URL %v does not match protocol %v", rawUrl, r.Protocol)
 	}
 
 	return true, nil

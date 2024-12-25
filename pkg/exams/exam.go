@@ -3,6 +3,8 @@ package exams
 
 import "github.com/OJarrisonn/medik/pkg/config"
 
+type ExamParser func(config config.Exam) (Exam, error)
+
 // Interface that describes a rule
 type Exam interface {
 	// Type returns the type of the exam

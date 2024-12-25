@@ -1,639 +1,653 @@
 package exams
 
 import (
-	"os"
+	"regexp"
+	"strings"
 	"testing"
+
+	"github.com/OJarrisonn/medik/pkg/config"
+	"github.com/stretchr/testify/assert"
 )
 
+func TestEnvParsersCollection(t *testing.T) {
+	// Inexistent parser
+	parser, ok := Parser("inexistent")
+
+	assert.Nil(t, parser)
+	assert.False(t, ok)
+
+	// Existing parsers
+	parser, ok = Parser("is-set")
+
+	assert.NotNil(t, parser)
+	assert.True(t, ok)
+}
+
+func TestEnvParsersContainsAll(t *testing.T) {
+	registered := make([]string, len(parsers))
+
+	i := 0
+	for k := range parsers {
+		registered[i] = k
+		i++
+	}
+
+	known := []string{
+		(&EnvIsSet{}).Type(),
+		(&EnvIsSetNotEmpty{}).Type(),
+		(&EnvRegex{}).Type(),
+		(&EnvOption{}).Type(),
+		(&EnvInteger{}).Type(),
+		(&EnvIntegerRange{}).Type(),
+		(&EnvFloat{}).Type(),
+		(&EnvFloatRange{}).Type(),
+		(&EnvFile{}).Type(),
+		(&EnvDir{}).Type(),
+		(&EnvIpv4Addr{}).Type(),
+		(&EnvIpv6Addr{}).Type(),
+		(&EnvIpAddr{}).Type(),
+		(&EnvHostname{}).Type(),
+	}
+
+	for i, k := range known {
+		known[i], _ = strings.CutPrefix(k, "env.")
+	}
+
+	assert.ElementsMatch(t, known, registered)
+}
+
+
+
 func TestEnvIsSet(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": "foo1",
-		"MEDIK_FOO2": "foo2",
-		"MEDIK_FOO3": "foo3",
-	}
+	exam := &EnvIsSet{Vars: []string{"VAR1", "VAR2"}}
 
-	unset_vars := []string{
-		"MEDIK_FOO4",
-		"MEDIK_FOO5",
-		"MEDIK_FOO6",
-	}
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
-
-	for k := range set_vars {
-		ok, err := (&EnvIsSet{Vars: k}).Examinate()
-
-		if !ok {
-			t.Errorf("%s is not set\n", k)
-		}
-
-		if err != nil {
-			t.Errorf("%v\n", err)
-		}
-	}
-
-	for _, v := range unset_vars {
-		ok, err := (&EnvIsSet{Vars: v}).Examinate()
-
-		if ok {
-			t.Errorf("%s is set\n", v)
-		}
-
-		if err == nil {
-			t.Errorf("No error was raised\n")
-		} else {
-			t.Logf("%v\n", err)
-		}
-	}
+	// Test when environment variables are set
+	t.Setenv("VAR1", "value1")
+	t.Setenv("VAR2", "value2")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
 }
 
-func TestEnvIsSetNotEmptyPass(t *testing.T) {
-	t.Setenv("MEDIK_FOO1", "abc")
+func TestEnvIsSetNotEmpty(t *testing.T) {
+	exam := &EnvIsSetNotEmpty{Vars: []string{"VAR1", "VAR2"}}
 
-	if ok, err := (&EnvIsSetNotEmpty{"MEDIK_FOO1"}).Examinate(); !ok {
-		t.Errorf("MEDIK_FOO1 is not set to an not empty string, %v", err)
-	}
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
+
+	// Test when environment variables are set to empty
+	t.Setenv("VAR1", "")
+	t.Setenv("VAR2", " ")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
+
+	// Test when environment variables are set to non-empty values
+	t.Setenv("VAR1", "value1")
+	t.Setenv("VAR2", "value2")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
 }
 
-func TestEnvIsSetNotEmptyFail(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": "",
-		"MEDIK_FOO2": "   ",
-		"MEDIK_FOO3": "\n",
-	}
+func TestEnvRegex(t *testing.T) {
+	regex, _ := regexp.Compile(`^value\d$`)
+	exam := &EnvRegex{Vars: []string{"VAR1", "VAR2"}, Regex: regex}
 
-	unset_vars := []string{"MEDIK_FOO4", "MEDIK_FOO5", "MEDIK_FOO6"}
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
+	// Test when environment variables do not match regex
+	t.Setenv("VAR1", "invalid")
+	t.Setenv("VAR2", "value2")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	for k := range set_vars {
-		if ok, err := (&EnvIsSetNotEmpty{k}).Examinate(); ok {
-			t.Errorf("%v is being accepted with value \"%v\"", k, os.Getenv(k))
-		} else {
-			t.Log(err)
-		}
-	}
-
-	for _, v := range unset_vars {
-		if ok, _ := (&EnvIsSetNotEmpty{v}).Examinate(); ok {
-			t.Errorf("%v is set", v)
-		}
-	}
+	// Test when environment variables match regex
+	t.Setenv("VAR1", "value1")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
 }
 
-func TestEnvRegexPass(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": "foo1",
-		"MEDIK_FOO2": "foo2",
-		"MEDIK_FOO3": "foo3",
-	}
+func TestEnvOption(t *testing.T) {
+	options := map[string]bool{"option1": true, "option2": true}
+	exam := &EnvOption{Vars: []string{"VAR1", "VAR2"}, Options: options}
 
-	unset_vars := []string{
-		"MEDIK_FOO4",
-		"MEDIK_FOO5",
-		"MEDIK_FOO6",
-	}
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	regex := "foo[0-9]"
+	// Test when environment variables do not match options
+	t.Setenv("VAR1", "invalid")
+	t.Setenv("VAR2", "option2")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
-
-	for k := range set_vars {
-		if ok, _ := (&EnvRegex{k, regex}).Examinate(); !ok {
-			t.Errorf("%s is not set\n", k)
-		}
-	}
-
-	for _, v := range unset_vars {
-		if ok, err := (&EnvRegex{v, regex}).Examinate(); ok {
-			t.Errorf("%s is set\n", v)
-		} else {
-			t.Logf("%v\n", err)
-		}
-	}
+	// Test when environment variables match options
+	t.Setenv("VAR1", "option1")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
 }
 
-func TestEnvRegexFail(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": "foo1",
-		"MEDIK_FOO2": "foo2",
-		"MEDIK_FOO3": "foo3",
-	}
+func TestEnvInteger(t *testing.T) {
+	exam := &EnvInteger{Vars: []string{"VAR1", "VAR2"}}
 
-	unset_vars := []string{
-		"MEDIK_FOO4",
-		"MEDIK_FOO5",
-		"MEDIK_FOO6",
-	}
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	regex := "bar[0-9]"
+	// Test when environment variables are not integers
+	t.Setenv("VAR1", "invalid")
+	t.Setenv("VAR2", "123")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
-
-	for k := range set_vars {
-		if ok, err := (&EnvRegex{k, regex}).Examinate(); ok {
-			t.Errorf("%s was accepted %v\n", k, err)
-		} else {
-			t.Log(err)
-		}
-	}
-
-	for _, v := range unset_vars {
-		if ok, _ := (&EnvRegex{v, regex}).Examinate(); ok {
-			t.Errorf("%s is set\n", v)
-		}
-	}
+	// Test when environment variables are integers
+	t.Setenv("VAR1", "456")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
 }
 
-func TestEnvRegexCompileError(t *testing.T) {
-	t.Setenv("MEDIK_FOO1", "foo1")
-	ok, err := (&EnvRegex{"MEDIK_FOO1", "foo[0-9"}).Examinate()
+func TestEnvIntegerRange(t *testing.T) {
+	exam := &EnvIntegerRange{Vars: []string{"VAR1", "VAR2"}, Min: 10, Max: 100}
 
-	if ok || err == nil {
-		t.Errorf("MEDIK_FOO1 is set and the regex `foo[0-9` was approved\n")
-	}
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	t.Logf("%v %T", err, err)
+	// Test when environment variables are not integers
+	t.Setenv("VAR1", "invalid")
+	t.Setenv("VAR2", "50")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
+
+	// Test when environment variables are out of range
+	t.Setenv("VAR1", "5")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
+
+	// Test when environment variables are within range
+	t.Setenv("VAR1", "20")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
 }
 
-func TestEnvOptionPass(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": "foo1",
-		"MEDIK_FOO2": "foo2",
-		"MEDIK_FOO3": "foo3",
-	}
+func TestEnvFloat(t *testing.T) {
+	exam := &EnvFloat{Vars: []string{"VAR1", "VAR2"}}
 
-	options := []string{"foo1", "foo2", "foo3"}
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
+	// Test when environment variables are not floats
+	t.Setenv("VAR1", "invalid")
+	t.Setenv("VAR2", "123.45")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	for k := range set_vars {
-		if ok, _ := (&EnvOption{k, options}).Examinate(); !ok {
-			t.Errorf("%s is not set\n", k)
-		}
-	}
+	// Test when environment variables are floats
+	t.Setenv("VAR1", "456.78")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
 }
 
-func TestEnvOptionUnset(t *testing.T) {
-	unset_vars := []string{
-		"MEDIK_FOO4",
-		"MEDIK_FOO5",
-		"MEDIK_FOO6",
-	}
+func TestEnvFloatRange(t *testing.T) {
+	exam := &EnvFloatRange{Vars: []string{"VAR1", "VAR2"}, Min: 10.5, Max: 100.5}
 
-	options := []string{"foo1", "foo2", "foo3"}
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	for _, v := range unset_vars {
-		if ok, _ := (&EnvOption{v, options}).Examinate(); ok {
-			t.Errorf("%s is set\n", v)
-		}
-	}
+	// Test when environment variables are not floats
+	t.Setenv("VAR1", "invalid")
+	t.Setenv("VAR2", "50.5")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
+
+	// Test when environment variables are out of range
+	t.Setenv("VAR1", "5.5")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
+
+	// Test when environment variables are within range
+	t.Setenv("VAR1", "20.5")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
 }
 
-func TestEnvOptionFail(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": "foo4",
-		"MEDIK_FOO2": "foo5",
-		"MEDIK_FOO3": "foo3",
-	}
+func TestEnvFile(t *testing.T) {
+	exam := &EnvFile{Vars: []string{"VAR1", "VAR2"}}
 
-	options := []string{"foo1", "foo2"}
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
+	// Test when environment variables are not valid files
+	t.Setenv("VAR1", "/invalid/path")
+	t.Setenv("VAR2", "/etc/hosts")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	for k := range set_vars {
-		if ok, err := (&EnvOption{k, options}).Examinate(); ok {
-			t.Errorf("%s is valid\n", k)
-		} else {
-			t.Logf("%v\n", err)
-		}
-	}
+	// Test when environment variables are valid files
+	t.Setenv("VAR1", "/etc/hosts")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
 }
 
-func TestEnvIntegerPass(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": "1",
-		"MEDIK_FOO2": "-2",
-		"MEDIK_FOO3": "3",
-	}
+func TestEnvDir(t *testing.T) {
+	exam := &EnvDir{Vars: []string{"VAR1", "VAR2"}}
 
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	for k := range set_vars {
-		if ok, err := (&EnvInteger{k}).Examinate(); !ok {
-			t.Errorf("%s is not set to an integer, %v\n", k, err)
-		}
-	}
+	// Test when environment variables are not valid directories
+	t.Setenv("VAR1", "/invalid/path")
+	t.Setenv("VAR2", "/etc")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
+
+	// Test when environment variables are valid directories
+	t.Setenv("VAR1", "/etc")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
 }
 
-func TestEnvIntegerFail(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": ".1",
-		"MEDIK_FOO2": "2O",
-		"MEDIK_FOO3": "3f",
-	}
+func TestEnvIpv4Addr(t *testing.T) {
+	exam := &EnvIpv4Addr{Vars: []string{"VAR1", "VAR2"}}
 
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	for k := range set_vars {
-		if ok, err := (&EnvInteger{k}).Examinate(); ok {
-			t.Errorf("%s is being accepted as an integer integer\n", k)
-		} else {
-			t.Logf("%v\n", err)
-		}
-	}
+	// Test when environment variables are not valid IPv4 addresses
+	t.Setenv("VAR1", "invalid")
+	t.Setenv("VAR2", "192.168.1.1")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
+
+	// Test when environment variables are valid IPv4 addresses
+	t.Setenv("VAR1", "10.0.0.1")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
 }
 
-func TestEnvIntegerUnset(t *testing.T) {
-	unset_vars := []string{
-		"MEDIK_FOO4",
-		"MEDIK_FOO5",
-		"MEDIK_FOO6",
-	}
+func TestEnvIpv6Addr(t *testing.T) {
+	exam := &EnvIpv6Addr{Vars: []string{"VAR1", "VAR2"}}
 
-	for _, v := range unset_vars {
-		if ok, _ := (&EnvInteger{v}).Examinate(); ok {
-			t.Errorf("%s is set\n", v)
-		}
-	}
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
+
+	// Test when environment variables are not valid IPv6 addresses
+	t.Setenv("VAR1", "invalid")
+	t.Setenv("VAR2", "2001:0db8:85a3:0000:0000:8a2e:0370:7334")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
+
+	// Test when environment variables are valid IPv6 addresses
+	t.Setenv("VAR1", "fe80::1ff:fe23:4567:890a")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
 }
 
-func TestEnvIntegerRangePass(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": "1",
-		"MEDIK_FOO2": "2",
-		"MEDIK_FOO3": "3",
-	}
+func TestEnvIpAddr(t *testing.T) {
+	exam := &EnvIpAddr{Vars: []string{"VAR1", "VAR2"}}
 
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	for k := range set_vars {
-		if ok, err := (&EnvIntegerRange{k, 1, 4}).Examinate(); !ok {
-			t.Errorf("%s is not set to an integer in the range [1,4), %v\n", k, err)
-		}
-	}
+	// Test when environment variables are not valid IP addresses
+	t.Setenv("VAR1", "invalid")
+	t.Setenv("VAR2", "192.168.1.1")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
+
+	// Test when environment variables are valid IP addresses
+	t.Setenv("VAR1", "2001:0db8:85a3:0000:0000:8a2e:0370:7334")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
 }
 
-func TestEnvIntegerRangeFail(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": "-1",
-		"MEDIK_FOO2": "0",
-		"MEDIK_FOO3": "4",
-	}
+func TestEnvHostname(t *testing.T) {
+	exam := &EnvHostname{Vars: []string{"VAR1", "VAR2"}, Protocol: "http"}
 
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 
-	for k := range set_vars {
-		if ok, err := (&EnvIntegerRange{k, 1, 3}).Examinate(); ok {
-			t.Errorf("%s is being accepted as an integer in the range [1,3]\n", k)
-		} else {
-			t.Logf("%v\n", err)
-		}
-	}
+	// Test when environment variables are not valid hostnames
+	t.Setenv("VAR1", "invalid")
+	t.Setenv("VAR2", "http://example.com")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
+
+	// Test when environment variables are valid hostnames
+	t.Setenv("VAR1", "http://example.com")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
+
+	exam2 := &EnvHostname{Vars: []string{"VAR1", "VAR2"}, Protocol: ""}
+	t.Setenv("VAR1", "example.com")
+	t.Setenv("VAR2", "tcp://example.com")
+	result, err = exam2.Examinate()
+	assert.True(t, result)
+	assert.NoError(t, err)
+	t.Setenv("VAR1", "\n")
+	result, err = exam2.Examinate()
+	assert.False(t, result)
+	assert.Error(t, err)
 }
 
-func TestEnvIntegerRangeError(t *testing.T) {
-	t.Setenv("MEDIK_FOO1", "a")
-	ok, err := (&EnvIntegerRange{"MEDIK_FOO1", 1, 0}).Examinate()
+func TestEnvIsSetParse(t *testing.T) {
+    exam := &EnvIsSet{}
 
-	if ok || err == nil {
-		t.Errorf("MEDIK_FOO1 is set and the range [1,0) was approved\n")
-	}
+    // Test invalid type
+    _, err := exam.Parse(config.Exam{Type: "invalid"})
+    assert.Error(t, err)
 
-	t.Logf("%v %T", err, err)
+    // Test vars not set
+    _, err = exam.Parse(config.Exam{Type: "env.is-set"})
+    assert.Error(t, err)
+
+    // Test valid config
+    parsed, err := exam.Parse(config.Exam{Type: "env.is-set", Vars: []string{"VAR1"}})
+    assert.NoError(t, err)
+    assert.Equal(t, &EnvIsSet{Vars: []string{"VAR1"}}, parsed)
 }
 
-func TestEnvIntegerRangeUnset(t *testing.T) {
-	unset_vars := []string{
-		"MEDIK_FOO4",
-		"MEDIK_FOO5",
-		"MEDIK_FOO6",
-	}
+func TestEnvIsSetNotEmptyParse(t *testing.T) {
+    exam := &EnvIsSetNotEmpty{}
 
-	for _, v := range unset_vars {
-		if ok, _ := (&EnvIntegerRange{v, 1, 4}).Examinate(); ok {
-			t.Errorf("%s is set\n", v)
-		}
-	}
+    // Test invalid type
+    _, err := exam.Parse(config.Exam{Type: "invalid"})
+    assert.Error(t, err)
+
+    // Test vars not set
+    _, err = exam.Parse(config.Exam{Type: "env.not-empty"})
+    assert.Error(t, err)
+
+    // Test valid config
+    parsed, err := exam.Parse(config.Exam{Type: "env.not-empty", Vars: []string{"VAR1"}})
+    assert.NoError(t, err)
+    assert.Equal(t, &EnvIsSetNotEmpty{Vars: []string{"VAR1"}}, parsed)
 }
 
-func TestEnvFloatPass(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": "1.0",
-		"MEDIK_FOO2": "2.0",
-		"MEDIK_FOO3": "-3.0",
-	}
+func TestEnvRegexParse(t *testing.T) {
+    exam := &EnvRegex{}
 
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
+    // Test invalid type
+    _, err := exam.Parse(config.Exam{Type: "invalid"})
+    assert.Error(t, err)
 
-	for k := range set_vars {
-		if ok, err := (&EnvFloat{k}).Examinate(); !ok {
-			t.Errorf("%s is not set to a float, %v\n", k, err)
-		}
-	}
+    // Test vars not set
+    _, err = exam.Parse(config.Exam{Type: "env.regex"})
+    assert.Error(t, err)
+
+    // Test regex not set
+    _, err = exam.Parse(config.Exam{Type: "env.regex", Vars: []string{"VAR1"}})
+    assert.Error(t, err)
+
+    // Test invalid regex
+    _, err = exam.Parse(config.Exam{Type: "env.regex", Vars: []string{"VAR1"}, Regex: "["})
+    assert.Error(t, err)
+
+    // Test valid config
+    parsed, err := exam.Parse(config.Exam{Type: "env.regex", Vars: []string{"VAR1"}, Regex: ".*"})
+    assert.NoError(t, err)
+    assert.NotNil(t, parsed)
 }
 
-func TestEnvFloatFail(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": "x.1",
-		"MEDIK_FOO2": "2O",
-		"MEDIK_FOO3": "3f",
-	}
+func TestEnvOptionParse(t *testing.T) {
+    exam := &EnvOption{}
 
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
+    // Test invalid type
+    _, err := exam.Parse(config.Exam{Type: "invalid"})
+    assert.Error(t, err)
 
-	for k := range set_vars {
-		if ok, err := (&EnvFloat{k}).Examinate(); ok {
-			t.Errorf("%s is being accepted as a float\n", k)
-		} else {
-			t.Logf("%v\n", err)
-		}
-	}
+    // Test vars not set
+    _, err = exam.Parse(config.Exam{Type: "env.options"})
+    assert.Error(t, err)
+
+    // Test options not set
+    _, err = exam.Parse(config.Exam{Type: "env.options", Vars: []string{"VAR1"}})
+    assert.Error(t, err)
+
+    // Test valid config
+    parsed, err := exam.Parse(config.Exam{Type: "env.options", Vars: []string{"VAR1"}, Options: []string{"option1"}})
+    assert.NoError(t, err)
+    assert.NotNil(t, parsed)
 }
 
-func TestEnvFloatUnset(t *testing.T) {
-	unset_vars := []string{
-		"MEDIK_FOO4",
-		"MEDIK_FOO5",
-		"MEDIK_FOO6",
-	}
+func TestEnvIntegerParse(t *testing.T) {
+    exam := &EnvInteger{}
 
-	for _, v := range unset_vars {
-		if ok, _ := (&EnvFloat{v}).Examinate(); ok {
-			t.Errorf("%s is set\n", v)
-		}
-	}
+    // Test invalid type
+    _, err := exam.Parse(config.Exam{Type: "invalid"})
+    assert.Error(t, err)
+
+    // Test vars not set
+    _, err = exam.Parse(config.Exam{Type: "env.int"})
+    assert.Error(t, err)
+
+    // Test valid config
+    parsed, err := exam.Parse(config.Exam{Type: "env.int", Vars: []string{"VAR1"}})
+    assert.NoError(t, err)
+    assert.Equal(t, &EnvInteger{Vars: []string{"VAR1"}}, parsed)
 }
 
-func TestEnvFloatRangeUnset(t *testing.T) {
-	unset_vars := []string{
-		"MEDIK_FOO4",
-		"MEDIK_FOO5",
-		"MEDIK_FOO6",
-	}
+func TestEnvIntegerRangeParse(t *testing.T) {
+    exam := &EnvIntegerRange{}
 
-	for _, v := range unset_vars {
-		if ok, _ := (&EnvFloatRange{v, 1.0, 4.0}).Examinate(); ok {
-			t.Errorf("%s is set\n", v)
-		}
-	}
+    // Test invalid type
+    _, err := exam.Parse(config.Exam{Type: "invalid"})
+    assert.Error(t, err)
+
+    // Test vars not set
+    _, err = exam.Parse(config.Exam{Type: "env.int-range"})
+    assert.Error(t, err)
+
+    // Test min not an integer
+    _, err = exam.Parse(config.Exam{Type: "env.int-range", Vars: []string{"VAR1"}, Min: "min", Max: 10})
+    assert.Error(t, err)
+
+    // Test max not an integer
+    _, err = exam.Parse(config.Exam{Type: "env.int-range", Vars: []string{"VAR1"}, Min: 0, Max: "max"})
+    assert.Error(t, err)
+
+    // Test valid config
+    parsed, err := exam.Parse(config.Exam{Type: "env.int-range", Vars: []string{"VAR1"}, Min: 0, Max: 10})
+    assert.NoError(t, err)
+    assert.Equal(t, &EnvIntegerRange{Vars: []string{"VAR1"}, Min: 0, Max: 10}, parsed)
 }
 
-func TestEnvFloatRangePass(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": "1.0",
-		"MEDIK_FOO2": "2.0",
-		"MEDIK_FOO3": "3.0",
-	}
+func TestEnvFloatParse(t *testing.T) {
+    exam := &EnvFloat{}
 
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
+    // Test invalid type
+    _, err := exam.Parse(config.Exam{Type: "invalid"})
+    assert.Error(t, err)
 
-	for k := range set_vars {
-		if ok, err := (&EnvFloatRange{k, 1.0, 3.0}).Examinate(); !ok {
-			t.Errorf("%s is not set to a float in the range [1.0,3.0], %v\n", k, err)
-		}
-	}
+    // Test vars not set
+    _, err = exam.Parse(config.Exam{Type: "env.float"})
+    assert.Error(t, err)
+
+    // Test valid config
+    parsed, err := exam.Parse(config.Exam{Type: "env.float", Vars: []string{"VAR1"}})
+    assert.NoError(t, err)
+    assert.Equal(t, &EnvFloat{Vars: []string{"VAR1"}}, parsed)
 }
 
-func TestEnvFloatRangeFail(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": ".9",
-		"MEDIK_FOO2": "2.1",
-	}
+func TestEnvFloatRangeParse(t *testing.T) {
+    exam := &EnvFloatRange{}
 
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
+    // Test invalid type
+    _, err := exam.Parse(config.Exam{Type: "invalid"})
+    assert.Error(t, err)
 
-	for k := range set_vars {
-		if ok, err := (&EnvFloatRange{k, 1.0, 2.0}).Examinate(); ok {
-			t.Errorf("%s is being accepted as a float in the range [1.0,2.0]\n", k)
-		} else {
-			t.Logf("%v\n", err)
-		}
-	}
+    // Test vars not set
+    _, err = exam.Parse(config.Exam{Type: "env.float-range"})
+    assert.Error(t, err)
+
+    // Test min not a float
+    _, err = exam.Parse(config.Exam{Type: "env.float-range", Vars: []string{"VAR1"}, Min: "min", Max: 10.0})
+    assert.Error(t, err)
+
+    // Test max not a float
+    _, err = exam.Parse(config.Exam{Type: "env.float-range", Vars: []string{"VAR1"}, Min: 0.0, Max: "max"})
+    assert.Error(t, err)
+
+    // Test valid config
+    parsed, err := exam.Parse(config.Exam{Type: "env.float-range", Vars: []string{"VAR1"}, Min: 0.0, Max: 10.0})
+    assert.NoError(t, err)
+    assert.Equal(t, &EnvFloatRange{Vars: []string{"VAR1"}, Min: 0.0, Max: 10.0}, parsed)
 }
 
-func TestEnvFloatRangeError(t *testing.T) {
-	t.Setenv("MEDIK_FOO1", "a.1")
-	ok, err := (&EnvFloatRange{"MEDIK_FOO1", 1.0, 0.0}).Examinate()
+func TestEnvFileParse(t *testing.T) {
+    exam := &EnvFile{}
 
-	if ok || err == nil {
-		t.Errorf("MEDIK_FOO1 is set and the range [1.0,0.0) was approved\n")
-	}
+    // Test invalid type
+    _, err := exam.Parse(config.Exam{Type: "invalid"})
+    assert.Error(t, err)
 
-	t.Logf("%v %T", err, err)
+    // Test vars not set
+    _, err = exam.Parse(config.Exam{Type: "env.file"})
+    assert.Error(t, err)
+
+    // Test valid config
+    parsed, err := exam.Parse(config.Exam{Type: "env.file", Vars: []string{"VAR1"}})
+    assert.NoError(t, err)
+    assert.Equal(t, &EnvFile{Vars: []string{"VAR1"}}, parsed)
 }
 
-func TestEnvFloatRangeErrorUnset(t *testing.T) {
-	unset_vars := []string{
-		"MEDIK_FOO4",
-		"MEDIK_FOO5",
-		"MEDIK_FOO6",
-	}
+func TestEnvDirParse(t *testing.T) {
+    exam := &EnvDir{}
 
-	for _, v := range unset_vars {
-		if ok, _ := (&EnvFloatRange{v, 1.0, 4.0}).Examinate(); ok {
-			t.Errorf("%s is set\n", v)
-		}
-	}
+    // Test invalid type
+    _, err := exam.Parse(config.Exam{Type: "invalid"})
+    assert.Error(t, err)
+
+    // Test vars not set
+    _, err = exam.Parse(config.Exam{Type: "env.dir"})
+    assert.Error(t, err)
+
+    // Test valid config
+    parsed, err := exam.Parse(config.Exam{Type: "env.dir", Vars: []string{"VAR1"}})
+    assert.NoError(t, err)
+    assert.Equal(t, &EnvDir{Vars: []string{"VAR1"}}, parsed)
 }
 
-func TestEnvFilePass(t *testing.T) {
-	t.Setenv("MEDIK_FOO1", "/etc/passwd")
+func TestEnvIpv4AddrParse(t *testing.T) {
+    exam := &EnvIpv4Addr{}
 
-	if ok, err := (&EnvFile{"MEDIK_FOO1"}).Examinate(); !ok {
-		t.Errorf("MEDIK_FOO1 is not set to a file, %v\n", err)
-	}
+    // Test invalid type
+    _, err := exam.Parse(config.Exam{Type: "invalid"})
+    assert.Error(t, err)
+
+    // Test vars not set
+    _, err = exam.Parse(config.Exam{Type: "env.ipv4"})
+    assert.Error(t, err)
+
+    // Test valid config
+    parsed, err := exam.Parse(config.Exam{Type: "env.ipv4", Vars: []string{"VAR1"}})
+    assert.NoError(t, err)
+    assert.Equal(t, &EnvIpv4Addr{Vars: []string{"VAR1"}}, parsed)
 }
 
-func TestEnvFileFail(t *testing.T) {
-	t.Setenv("MEDIK_FOO1", "/this/file/does/not/exist/at/all/dingle/bell/beep/boop/foo/bar/baz")
+func TestEnvIpv6AddrParse(t *testing.T) {
+    exam := &EnvIpv6Addr{}
 
-	if ok, err := (&EnvFile{"MEDIK_FOO1"}).Examinate(); ok {
-		t.Errorf("MEDIK_FOO1 is being accepted as a file\n")
-	} else {
-		t.Logf("%v\n", err)
-	}
+    // Test invalid type
+    _, err := exam.Parse(config.Exam{Type: "invalid"})
+    assert.Error(t, err)
+
+    // Test vars not set
+    _, err = exam.Parse(config.Exam{Type: "env.ipv6"})
+    assert.Error(t, err)
+
+    // Test valid config
+    parsed, err := exam.Parse(config.Exam{Type: "env.ipv6", Vars: []string{"VAR1"}})
+    assert.NoError(t, err)
+    assert.Equal(t, &EnvIpv6Addr{Vars: []string{"VAR1"}}, parsed)
 }
 
-func TestEnvFileUnset(t *testing.T) {
-	if ok, _ := (&EnvFile{"MEDIK_FOO4"}).Examinate(); ok {
-		t.Errorf("MEDIK_FOO4 is set\n")
-	}
+func TestEnvIpAddrParse(t *testing.T) {
+    exam := &EnvIpAddr{}
+
+    // Test invalid type
+    _, err := exam.Parse(config.Exam{Type: "invalid"})
+    assert.Error(t, err)
+
+    // Test vars not set
+    _, err = exam.Parse(config.Exam{Type: "env.ip"})
+    assert.Error(t, err)
+
+    // Test valid config
+    parsed, err := exam.Parse(config.Exam{Type: "env.ip", Vars: []string{"VAR1"}})
+    assert.NoError(t, err)
+    assert.Equal(t, &EnvIpAddr{Vars: []string{"VAR1"}}, parsed)
 }
 
-func TestEnvDirPass(t *testing.T) {
-	t.Setenv("MEDIK_FOO1", "/etc")
+func TestEnvHostnameParse(t *testing.T) {
+    exam := &EnvHostname{}
 
-	if ok, err := (&EnvDir{"MEDIK_FOO1"}).Examinate(); !ok {
-		t.Errorf("MEDIK_FOO1 is not set to a directory, %v\n", err)
-	}
-}
+    // Test invalid type
+    _, err := exam.Parse(config.Exam{Type: "invalid"})
+    assert.Error(t, err)
 
-func TestEnvDirFail(t *testing.T) {
-	t.Setenv("MEDIK_FOO1", "/this/directory/does/not/exist/at/all/dingle/bell/beep/boop/foo/bar/baz")
+    // Test vars not set
+    _, err = exam.Parse(config.Exam{Type: "env.hostname"})
+    assert.Error(t, err)
 
-	if ok, err := (&EnvDir{"MEDIK_FOO1"}).Examinate(); ok {
-		t.Errorf("MEDIK_FOO1 is being accepted as a directory\n")
-	} else {
-		t.Logf("%v\n", err)
-	}
-}
-
-func TestEnvDirNotADir(t *testing.T) {
-	t.Setenv("MEDIK_FOO1", "/etc/passwd")
-
-	if ok, err := (&EnvDir{"MEDIK_FOO1"}).Examinate(); ok {
-		t.Errorf("MEDIK_FOO1 is being accepted as a directory\n")
-	} else {
-		t.Logf("%v\n", err)
-	}
-}
-
-func TestEnvDirUnset(t *testing.T) {
-	if ok, _ := (&EnvDir{"MEDIK_FOO4"}).Examinate(); ok {
-		t.Errorf("MEDIK_FOO4 is set\n")
-	}
-}
-
-func TestEnvIpPass(t *testing.T) {
-	// IPv4 and IPv6 addresses
-	set_vars := map[string]string{
-		"MEDIK_FOO1": "0.0.0.0",
-		"MEDIK_FOO2": "::1",
-	}
-
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
-
-	for k := range set_vars {
-		if ok, err := (&EnvIpAddr{k}).Examinate(); !ok {
-			t.Errorf("%s is not set to an IP address, %v\n", k, err)
-		}
-	}
-
-	if _, err := (&EnvIpv4Addr{"MEDIK_FOO1"}).Examinate(); err != nil {
-		t.Errorf("MEDIK_FOO1 is not an IPv4 address %v\n", err)
-	}
-
-	if _, err := (&EnvIpv6Addr{"MEDIK_FOO2"}).Examinate(); err != nil {
-		t.Errorf("MEDIK_FOO2 is not an IPv6 address %v\n", err)
-	}
-}
-
-func TestEnvIpFail(t *testing.T) {
-	set_vars := map[string]string{
-		"MEDIK_FOO1": "127.o.o.1",
-		"MEDIK_FOO2": "abcd:efgh:ijkl:mnop:qrst:uvwx:yzab:cdef",
-	}
-
-	for k, v := range set_vars {
-		t.Setenv(k, v)
-	}
-
-	for k := range set_vars {
-		if ok, err := (&EnvIpAddr{k}).Examinate(); ok {
-			t.Errorf("%s is being accepted as an IP address\n", k)
-		} else {
-			t.Logf("%v\n", err)
-		}
-	}
-
-	if _, err := (&EnvIpv4Addr{"MEDIK_FOO1"}).Examinate(); err == nil {
-		t.Errorf("MEDIK_FOO1 is an IPv4 address\n")
-	} else {
-		t.Logf("%v\n", err)
-	}
-
-	if _, err := (&EnvIpv6Addr{"MEDIK_FOO2"}).Examinate(); err == nil {
-		t.Errorf("MEDIK_FOO2 is an IPv6 address\n")
-	} else {
-		t.Logf("%v\n", err)
-	}
-}
-
-func TestEnvIpUnset(t *testing.T) {
-	unset_vars := []string{
-		"MEDIK_FOO4",
-		"MEDIK_FOO5",
-		"MEDIK_FOO6",
-	}
-
-	for _, v := range unset_vars {
-		if ok, _ := (&EnvIpAddr{v}).Examinate(); ok {
-			t.Errorf("%s is set\n", v)
-		}
-	}
-}
-
-func TestEnvHostnamePass(t *testing.T) {
-	t.Setenv("MEDIK_FOO1", "localhost")
-	t.Setenv("MEDIK_FOO2", "http://localhost")
-
-	if ok, err := (&EnvHostname{"MEDIK_FOO1", ""}).Examinate(); !ok {
-		t.Errorf("MEDIK_FOO1 is not set to a valid host, %v\n", err)
-	}
-
-	if ok, err := (&EnvHostname{"MEDIK_FOO2", "http"}).Examinate(); !ok {
-		t.Errorf("MEDIK_FOO2 is not set to a valid host, %v\n", err)
-	}
-}
-
-func TestEnvHostnameFail(t *testing.T) {
-	t.Setenv("MEDIK_FOO1", "http://localhost")
-	t.Setenv("MEDIK_FOO2", "\n")
-
-	if ok, err := (&EnvHostname{"MEDIK_FOO1", "https"}).Examinate(); ok {
-		t.Errorf("MEDIK_FOO1 is being accepted as a hostname\n")
-	} else {
-		t.Logf("%v\n", err)
-	}
-
-	if ok, err := (&EnvHostname{"MEDIK_FOO2", ""}).Examinate(); ok {
-		t.Errorf("MEDIK_FOO2 is being accepted as a hostname\n")
-	} else {
-		t.Logf("%v\n", err)
-	}
-}
-
-func TestEnvHostnameUnset(t *testing.T) {
-	unset_vars := []string{
-		"MEDIK_FOO4",
-		"MEDIK_FOO5",
-		"MEDIK_FOO6",
-	}
-
-	for _, v := range unset_vars {
-		if ok, _ := (&EnvHostname{v, ""}).Examinate(); ok {
-			t.Errorf("%s is set\n", v)
-		}
-	}
+    // Test valid config
+    parsed, err := exam.Parse(config.Exam{Type: "env.hostname", Vars: []string{"VAR1"}, Protocol: "http"})
+    assert.NoError(t, err)
+    assert.Equal(t, &EnvHostname{Vars: []string{"VAR1"}, Protocol: "http"}, parsed)
 }
