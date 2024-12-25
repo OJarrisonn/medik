@@ -25,9 +25,9 @@ type Exam struct {
 }
 
 // Given the contents of a Medik configuration file, parse it and return a config.Medik object
-func Parse(file string) (*Medik, error) {
+func Parse(content string) (*Medik, error) {
 	var m Medik
-	err := yaml.Unmarshal([]byte(file), &m)
+	err := yaml.Unmarshal([]byte(content), &m)
 
 	if err != nil {
 		return nil, err

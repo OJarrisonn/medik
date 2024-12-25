@@ -1,7 +1,11 @@
 // This package defines rules behaviour for a Medik configuration file
 package exams
 
-import "github.com/OJarrisonn/medik/pkg/config"
+import (
+	"strings"
+
+	"github.com/OJarrisonn/medik/pkg/config"
+)
 
 type ExamParser func(config config.Exam) (Exam, error)
 
@@ -19,4 +23,18 @@ type Exam interface {
 	// Returns true if the rule is being enforced, false otherwise
 	// Returns an error if any underlying operation fails or the rule is not being enforced
 	Examinate() (bool, error)
+}
+
+// Parser returns an ExamParser for the given type
+// A type is a string in the format of "category.kind"
+// Returns a bool indicating if the parser was found
+func Parser(t string) (ExamParser, bool) {
+	cat, kind, _ := strings.Cut(t, ".")
+
+	switch cat {
+	case "env":
+		return envParser(kind)
+	default:
+		return nil, false
+	}
 }

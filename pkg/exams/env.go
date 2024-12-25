@@ -14,7 +14,7 @@ import (
 // Function to get a parser for a given type `env.*`
 // The type is the part after `env.` in the exam type
 // Returns the parser and a boolean indicating if the parser was found
-func Parser(ty string) (ExamParser, bool) {
+func envParser(ty string) (ExamParser, bool) {
 	if parser, ok := parsers[ty]; ok {
 		return parser, ok
 	}
