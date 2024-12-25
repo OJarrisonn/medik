@@ -35,16 +35,24 @@ func (r *FloatRange) Parse(config config.Exam) (exams.Exam, error) {
 		return nil, &VarsUnsetError{Exam: r.Type()}
 	}
 
+	if config.Min == nil {
+		return nil, &exams.MissingFieldError{Field: "min", Exam: r.Type()}
+	}
+
 	switch config.Min.(type) {
 	case float64:
 	default:
-		return nil, fmt.Errorf("min is not a float for env.float-range")
+		return nil, &exams.FieldValueError{Field: "min", Exam: r.Type(), Value: fmt.Sprint(config.Min), Message: "expected a float value"}
+	}
+
+	if config.Max == nil {
+		return nil, &exams.MissingFieldError{Field: "max", Exam: r.Type()}
 	}
 
 	switch config.Max.(type) {
 	case float64:
 	default:
-		return nil, fmt.Errorf("max is not a float for env.float-range")
+		return nil, &exams.FieldValueError{Field: "max", Exam: r.Type(), Value: fmt.Sprint(config.Max), Message: "expected a float value"}
 	}
 
 	return &FloatRange{config.Vars, config.Min.(float64), config.Max.(float64)}, nil

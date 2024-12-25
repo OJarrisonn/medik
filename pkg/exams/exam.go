@@ -47,3 +47,24 @@ type WrongExamParserError struct {
 func (e *WrongExamParserError) Error() string {
 	return "wrong exam parser: using " + e.Using + " parser for a " + e.Source + " exam"
 }
+
+// An error to describe a missing field in a config.Exam during its parsing
+type MissingFieldError struct {
+	Field,
+	Exam  string
+}
+
+func (e *MissingFieldError) Error() string {
+	return "missing field `" + e.Field + "` in exam " + e.Exam
+}
+
+type FieldValueError struct {
+	Field,
+	Exam,
+	Value,
+	Message string
+}
+
+func (e *FieldValueError) Error() string {
+	return "invalid value '" + e.Value + "' for field `" + e.Field + "` in exam " + e.Exam + ": " + e.Message
+}

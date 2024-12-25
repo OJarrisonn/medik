@@ -34,13 +34,13 @@ func (r *Regex) Parse(config config.Exam) (exams.Exam, error) {
 	}
 
 	if config.Regex == "" {
-		return nil, fmt.Errorf("regex is not set for env.regex")
+		return nil, &exams.MissingFieldError{Field: "regex", Exam: r.Type()}
 	}
 
 	regexp, rerr := regexp.Compile(config.Regex)
 
 	if rerr != nil {
-		return nil, fmt.Errorf("invalid regex %v for env.regex, %v", config.Regex, rerr)
+		return nil, &exams.FieldValueError{Field: "regex", Exam: r.Type(), Value: config.Regex, Message: rerr.Error()}
 	}
 
 	return &Regex{config.Vars, regexp}, nil

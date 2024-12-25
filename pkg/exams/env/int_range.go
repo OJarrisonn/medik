@@ -35,16 +35,24 @@ func (r *IntRange) Parse(config config.Exam) (exams.Exam, error) {
 		return nil, &VarsUnsetError{Exam: r.Type()}
 	}
 
+	if config.Min == nil {
+		return nil, &exams.MissingFieldError{Field: "min", Exam: r.Type()}
+	}
+
 	switch config.Min.(type) {
 	case int:
 	default:
-		return nil, fmt.Errorf("min is not an integer for env.int-range")
+		return nil, &exams.FieldValueError{Field: "min", Exam: r.Type(), Value: fmt.Sprint(config.Min), Message: "expected an integer value"}
+	}
+
+	if config.Max == nil {
+		return nil, &exams.MissingFieldError{Field: "max", Exam: r.Type()}
 	}
 
 	switch config.Max.(type) {
 	case int:
 	default:
-		return nil, fmt.Errorf("max is not an integer for env.int-range")
+		return nil, &exams.FieldValueError{Field: "max", Exam: r.Type(), Value: fmt.Sprint(config.Max), Message: "expected an integer value"}
 	}
 
 	return &IntRange{config.Vars, config.Min.(int), config.Max.(int)}, nil

@@ -32,7 +32,7 @@ func (r *Option) Parse(config config.Exam) (exams.Exam, error) {
 	}
 
 	if len(config.Options) == 0 {
-		return nil, fmt.Errorf("options is not set for env.options")
+		return nil, &exams.MissingFieldError{Field: "options", Exam: r.Type()}
 	}
 
 	options := make(map[string]bool)
