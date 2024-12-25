@@ -27,7 +27,7 @@ func (r *Float) Parse(config config.Exam) (exams.Exam, error) {
 	}
 
 	if len(config.Vars) == 0 {
-		return nil, fmt.Errorf("vars is not set for env.float")
+		return nil, &VarsUnsetError{Exam: r.Type()}
 	}
 
 	return &Float{config.Vars}, nil

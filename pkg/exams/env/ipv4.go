@@ -27,7 +27,7 @@ func (r *Ipv4) Parse(config config.Exam) (exams.Exam, error) {
 	}
 
 	if len(config.Vars) == 0 {
-		return nil, fmt.Errorf("vars is not set for env.ipv4")
+		return nil, &VarsUnsetError{Exam: r.Type()}
 	}
 
 	return &Ipv4{config.Vars}, nil

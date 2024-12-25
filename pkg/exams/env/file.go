@@ -26,7 +26,7 @@ func (r *File) Parse(config config.Exam) (exams.Exam, error) {
 	}
 
 	if len(config.Vars) == 0 {
-		return nil, fmt.Errorf("vars is not set for env.file")
+		return nil, &VarsUnsetError{Exam: r.Type()}
 	}
 
 	return &File{config.Vars}, nil

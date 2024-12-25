@@ -26,7 +26,7 @@ func (r *IsSet) Parse(config config.Exam) (exams.Exam, error) {
 	}
 
 	if len(config.Vars) == 0 {
-		return nil, fmt.Errorf("vars is not set for env.is-set")
+		return nil, &VarsUnsetError{Exam: r.Type()}
 	}
 
 	return &IsSet{config.Vars}, nil

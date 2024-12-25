@@ -29,7 +29,7 @@ func (r *Hostname) Parse(config config.Exam) (exams.Exam, error) {
 	}
 
 	if len(config.Vars) == 0 {
-		return nil, fmt.Errorf("vars is not set for env.hostname")
+		return nil, &VarsUnsetError{Exam: r.Type()}
 	}
 
 	return &Hostname{config.Vars, config.Protocol}, nil

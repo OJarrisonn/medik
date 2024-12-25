@@ -30,7 +30,7 @@ func (r *Regex) Parse(config config.Exam) (exams.Exam, error) {
 	}
 
 	if len(config.Vars) == 0 {
-		return nil, fmt.Errorf("vars is not set for env.regex")
+		return nil, &VarsUnsetError{Exam: r.Type()}
 	}
 
 	if config.Regex == "" {

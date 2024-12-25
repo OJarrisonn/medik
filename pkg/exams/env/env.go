@@ -32,3 +32,11 @@ var parsers = map[string]func(config config.Exam) (exams.Exam, error){
 	exams.ExamType[*Ip]():         exams.ExamParse[*Ip](),
 	exams.ExamType[*Hostname]():   exams.ExamParse[*Hostname](),
 }
+
+type VarsUnsetError struct {
+	Exam string
+}
+
+func (e *VarsUnsetError) Error() string {
+	return "`vars` field is not set for exam " + e.Exam
+}

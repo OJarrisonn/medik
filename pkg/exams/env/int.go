@@ -28,7 +28,7 @@ func (r *Int) Parse(config config.Exam) (exams.Exam, error) {
 	}
 
 	if len(config.Vars) == 0 {
-		return nil, fmt.Errorf("vars is not set for env.int")
+		return nil, &VarsUnsetError{Exam: r.Type()}
 	}
 
 	return &Int{config.Vars}, nil
