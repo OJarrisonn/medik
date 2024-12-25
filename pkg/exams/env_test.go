@@ -56,8 +56,6 @@ func TestEnvParsersContainsAll(t *testing.T) {
 	assert.ElementsMatch(t, known, registered)
 }
 
-
-
 func TestEnvIsSet(t *testing.T) {
 	exam := &EnvIsSet{Vars: []string{"VAR1", "VAR2"}}
 
@@ -387,267 +385,267 @@ func TestEnvHostname(t *testing.T) {
 }
 
 func TestEnvIsSetParse(t *testing.T) {
-    exam := &EnvIsSet{}
+	exam := &EnvIsSet{}
 
-    // Test invalid type
-    _, err := exam.Parse(config.Exam{Type: "invalid"})
-    assert.Error(t, err)
+	// Test invalid type
+	_, err := exam.Parse(config.Exam{Type: "invalid"})
+	assert.Error(t, err)
 
-    // Test vars not set
-    _, err = exam.Parse(config.Exam{Type: "env.is-set"})
-    assert.Error(t, err)
+	// Test vars not set
+	_, err = exam.Parse(config.Exam{Type: "env.is-set"})
+	assert.Error(t, err)
 
-    // Test valid config
-    parsed, err := exam.Parse(config.Exam{Type: "env.is-set", Vars: []string{"VAR1"}})
-    assert.NoError(t, err)
-    assert.Equal(t, &EnvIsSet{Vars: []string{"VAR1"}}, parsed)
+	// Test valid config
+	parsed, err := exam.Parse(config.Exam{Type: "env.is-set", Vars: []string{"VAR1"}})
+	assert.NoError(t, err)
+	assert.Equal(t, &EnvIsSet{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvIsSetNotEmptyParse(t *testing.T) {
-    exam := &EnvIsSetNotEmpty{}
+	exam := &EnvIsSetNotEmpty{}
 
-    // Test invalid type
-    _, err := exam.Parse(config.Exam{Type: "invalid"})
-    assert.Error(t, err)
+	// Test invalid type
+	_, err := exam.Parse(config.Exam{Type: "invalid"})
+	assert.Error(t, err)
 
-    // Test vars not set
-    _, err = exam.Parse(config.Exam{Type: "env.not-empty"})
-    assert.Error(t, err)
+	// Test vars not set
+	_, err = exam.Parse(config.Exam{Type: "env.not-empty"})
+	assert.Error(t, err)
 
-    // Test valid config
-    parsed, err := exam.Parse(config.Exam{Type: "env.not-empty", Vars: []string{"VAR1"}})
-    assert.NoError(t, err)
-    assert.Equal(t, &EnvIsSetNotEmpty{Vars: []string{"VAR1"}}, parsed)
+	// Test valid config
+	parsed, err := exam.Parse(config.Exam{Type: "env.not-empty", Vars: []string{"VAR1"}})
+	assert.NoError(t, err)
+	assert.Equal(t, &EnvIsSetNotEmpty{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvRegexParse(t *testing.T) {
-    exam := &EnvRegex{}
+	exam := &EnvRegex{}
 
-    // Test invalid type
-    _, err := exam.Parse(config.Exam{Type: "invalid"})
-    assert.Error(t, err)
+	// Test invalid type
+	_, err := exam.Parse(config.Exam{Type: "invalid"})
+	assert.Error(t, err)
 
-    // Test vars not set
-    _, err = exam.Parse(config.Exam{Type: "env.regex"})
-    assert.Error(t, err)
+	// Test vars not set
+	_, err = exam.Parse(config.Exam{Type: "env.regex"})
+	assert.Error(t, err)
 
-    // Test regex not set
-    _, err = exam.Parse(config.Exam{Type: "env.regex", Vars: []string{"VAR1"}})
-    assert.Error(t, err)
+	// Test regex not set
+	_, err = exam.Parse(config.Exam{Type: "env.regex", Vars: []string{"VAR1"}})
+	assert.Error(t, err)
 
-    // Test invalid regex
-    _, err = exam.Parse(config.Exam{Type: "env.regex", Vars: []string{"VAR1"}, Regex: "["})
-    assert.Error(t, err)
+	// Test invalid regex
+	_, err = exam.Parse(config.Exam{Type: "env.regex", Vars: []string{"VAR1"}, Regex: "["})
+	assert.Error(t, err)
 
-    // Test valid config
-    parsed, err := exam.Parse(config.Exam{Type: "env.regex", Vars: []string{"VAR1"}, Regex: ".*"})
-    assert.NoError(t, err)
-    assert.NotNil(t, parsed)
+	// Test valid config
+	parsed, err := exam.Parse(config.Exam{Type: "env.regex", Vars: []string{"VAR1"}, Regex: ".*"})
+	assert.NoError(t, err)
+	assert.NotNil(t, parsed)
 }
 
 func TestEnvOptionParse(t *testing.T) {
-    exam := &EnvOption{}
+	exam := &EnvOption{}
 
-    // Test invalid type
-    _, err := exam.Parse(config.Exam{Type: "invalid"})
-    assert.Error(t, err)
+	// Test invalid type
+	_, err := exam.Parse(config.Exam{Type: "invalid"})
+	assert.Error(t, err)
 
-    // Test vars not set
-    _, err = exam.Parse(config.Exam{Type: "env.options"})
-    assert.Error(t, err)
+	// Test vars not set
+	_, err = exam.Parse(config.Exam{Type: "env.options"})
+	assert.Error(t, err)
 
-    // Test options not set
-    _, err = exam.Parse(config.Exam{Type: "env.options", Vars: []string{"VAR1"}})
-    assert.Error(t, err)
+	// Test options not set
+	_, err = exam.Parse(config.Exam{Type: "env.options", Vars: []string{"VAR1"}})
+	assert.Error(t, err)
 
-    // Test valid config
-    parsed, err := exam.Parse(config.Exam{Type: "env.options", Vars: []string{"VAR1"}, Options: []string{"option1"}})
-    assert.NoError(t, err)
-    assert.NotNil(t, parsed)
+	// Test valid config
+	parsed, err := exam.Parse(config.Exam{Type: "env.options", Vars: []string{"VAR1"}, Options: []string{"option1"}})
+	assert.NoError(t, err)
+	assert.NotNil(t, parsed)
 }
 
 func TestEnvIntegerParse(t *testing.T) {
-    exam := &EnvInteger{}
+	exam := &EnvInteger{}
 
-    // Test invalid type
-    _, err := exam.Parse(config.Exam{Type: "invalid"})
-    assert.Error(t, err)
+	// Test invalid type
+	_, err := exam.Parse(config.Exam{Type: "invalid"})
+	assert.Error(t, err)
 
-    // Test vars not set
-    _, err = exam.Parse(config.Exam{Type: "env.int"})
-    assert.Error(t, err)
+	// Test vars not set
+	_, err = exam.Parse(config.Exam{Type: "env.int"})
+	assert.Error(t, err)
 
-    // Test valid config
-    parsed, err := exam.Parse(config.Exam{Type: "env.int", Vars: []string{"VAR1"}})
-    assert.NoError(t, err)
-    assert.Equal(t, &EnvInteger{Vars: []string{"VAR1"}}, parsed)
+	// Test valid config
+	parsed, err := exam.Parse(config.Exam{Type: "env.int", Vars: []string{"VAR1"}})
+	assert.NoError(t, err)
+	assert.Equal(t, &EnvInteger{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvIntegerRangeParse(t *testing.T) {
-    exam := &EnvIntegerRange{}
+	exam := &EnvIntegerRange{}
 
-    // Test invalid type
-    _, err := exam.Parse(config.Exam{Type: "invalid"})
-    assert.Error(t, err)
+	// Test invalid type
+	_, err := exam.Parse(config.Exam{Type: "invalid"})
+	assert.Error(t, err)
 
-    // Test vars not set
-    _, err = exam.Parse(config.Exam{Type: "env.int-range"})
-    assert.Error(t, err)
+	// Test vars not set
+	_, err = exam.Parse(config.Exam{Type: "env.int-range"})
+	assert.Error(t, err)
 
-    // Test min not an integer
-    _, err = exam.Parse(config.Exam{Type: "env.int-range", Vars: []string{"VAR1"}, Min: "min", Max: 10})
-    assert.Error(t, err)
+	// Test min not an integer
+	_, err = exam.Parse(config.Exam{Type: "env.int-range", Vars: []string{"VAR1"}, Min: "min", Max: 10})
+	assert.Error(t, err)
 
-    // Test max not an integer
-    _, err = exam.Parse(config.Exam{Type: "env.int-range", Vars: []string{"VAR1"}, Min: 0, Max: "max"})
-    assert.Error(t, err)
+	// Test max not an integer
+	_, err = exam.Parse(config.Exam{Type: "env.int-range", Vars: []string{"VAR1"}, Min: 0, Max: "max"})
+	assert.Error(t, err)
 
-    // Test valid config
-    parsed, err := exam.Parse(config.Exam{Type: "env.int-range", Vars: []string{"VAR1"}, Min: 0, Max: 10})
-    assert.NoError(t, err)
-    assert.Equal(t, &EnvIntegerRange{Vars: []string{"VAR1"}, Min: 0, Max: 10}, parsed)
+	// Test valid config
+	parsed, err := exam.Parse(config.Exam{Type: "env.int-range", Vars: []string{"VAR1"}, Min: 0, Max: 10})
+	assert.NoError(t, err)
+	assert.Equal(t, &EnvIntegerRange{Vars: []string{"VAR1"}, Min: 0, Max: 10}, parsed)
 }
 
 func TestEnvFloatParse(t *testing.T) {
-    exam := &EnvFloat{}
+	exam := &EnvFloat{}
 
-    // Test invalid type
-    _, err := exam.Parse(config.Exam{Type: "invalid"})
-    assert.Error(t, err)
+	// Test invalid type
+	_, err := exam.Parse(config.Exam{Type: "invalid"})
+	assert.Error(t, err)
 
-    // Test vars not set
-    _, err = exam.Parse(config.Exam{Type: "env.float"})
-    assert.Error(t, err)
+	// Test vars not set
+	_, err = exam.Parse(config.Exam{Type: "env.float"})
+	assert.Error(t, err)
 
-    // Test valid config
-    parsed, err := exam.Parse(config.Exam{Type: "env.float", Vars: []string{"VAR1"}})
-    assert.NoError(t, err)
-    assert.Equal(t, &EnvFloat{Vars: []string{"VAR1"}}, parsed)
+	// Test valid config
+	parsed, err := exam.Parse(config.Exam{Type: "env.float", Vars: []string{"VAR1"}})
+	assert.NoError(t, err)
+	assert.Equal(t, &EnvFloat{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvFloatRangeParse(t *testing.T) {
-    exam := &EnvFloatRange{}
+	exam := &EnvFloatRange{}
 
-    // Test invalid type
-    _, err := exam.Parse(config.Exam{Type: "invalid"})
-    assert.Error(t, err)
+	// Test invalid type
+	_, err := exam.Parse(config.Exam{Type: "invalid"})
+	assert.Error(t, err)
 
-    // Test vars not set
-    _, err = exam.Parse(config.Exam{Type: "env.float-range"})
-    assert.Error(t, err)
+	// Test vars not set
+	_, err = exam.Parse(config.Exam{Type: "env.float-range"})
+	assert.Error(t, err)
 
-    // Test min not a float
-    _, err = exam.Parse(config.Exam{Type: "env.float-range", Vars: []string{"VAR1"}, Min: "min", Max: 10.0})
-    assert.Error(t, err)
+	// Test min not a float
+	_, err = exam.Parse(config.Exam{Type: "env.float-range", Vars: []string{"VAR1"}, Min: "min", Max: 10.0})
+	assert.Error(t, err)
 
-    // Test max not a float
-    _, err = exam.Parse(config.Exam{Type: "env.float-range", Vars: []string{"VAR1"}, Min: 0.0, Max: "max"})
-    assert.Error(t, err)
+	// Test max not a float
+	_, err = exam.Parse(config.Exam{Type: "env.float-range", Vars: []string{"VAR1"}, Min: 0.0, Max: "max"})
+	assert.Error(t, err)
 
-    // Test valid config
-    parsed, err := exam.Parse(config.Exam{Type: "env.float-range", Vars: []string{"VAR1"}, Min: 0.0, Max: 10.0})
-    assert.NoError(t, err)
-    assert.Equal(t, &EnvFloatRange{Vars: []string{"VAR1"}, Min: 0.0, Max: 10.0}, parsed)
+	// Test valid config
+	parsed, err := exam.Parse(config.Exam{Type: "env.float-range", Vars: []string{"VAR1"}, Min: 0.0, Max: 10.0})
+	assert.NoError(t, err)
+	assert.Equal(t, &EnvFloatRange{Vars: []string{"VAR1"}, Min: 0.0, Max: 10.0}, parsed)
 }
 
 func TestEnvFileParse(t *testing.T) {
-    exam := &EnvFile{}
+	exam := &EnvFile{}
 
-    // Test invalid type
-    _, err := exam.Parse(config.Exam{Type: "invalid"})
-    assert.Error(t, err)
+	// Test invalid type
+	_, err := exam.Parse(config.Exam{Type: "invalid"})
+	assert.Error(t, err)
 
-    // Test vars not set
-    _, err = exam.Parse(config.Exam{Type: "env.file"})
-    assert.Error(t, err)
+	// Test vars not set
+	_, err = exam.Parse(config.Exam{Type: "env.file"})
+	assert.Error(t, err)
 
-    // Test valid config
-    parsed, err := exam.Parse(config.Exam{Type: "env.file", Vars: []string{"VAR1"}})
-    assert.NoError(t, err)
-    assert.Equal(t, &EnvFile{Vars: []string{"VAR1"}}, parsed)
+	// Test valid config
+	parsed, err := exam.Parse(config.Exam{Type: "env.file", Vars: []string{"VAR1"}})
+	assert.NoError(t, err)
+	assert.Equal(t, &EnvFile{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvDirParse(t *testing.T) {
-    exam := &EnvDir{}
+	exam := &EnvDir{}
 
-    // Test invalid type
-    _, err := exam.Parse(config.Exam{Type: "invalid"})
-    assert.Error(t, err)
+	// Test invalid type
+	_, err := exam.Parse(config.Exam{Type: "invalid"})
+	assert.Error(t, err)
 
-    // Test vars not set
-    _, err = exam.Parse(config.Exam{Type: "env.dir"})
-    assert.Error(t, err)
+	// Test vars not set
+	_, err = exam.Parse(config.Exam{Type: "env.dir"})
+	assert.Error(t, err)
 
-    // Test valid config
-    parsed, err := exam.Parse(config.Exam{Type: "env.dir", Vars: []string{"VAR1"}})
-    assert.NoError(t, err)
-    assert.Equal(t, &EnvDir{Vars: []string{"VAR1"}}, parsed)
+	// Test valid config
+	parsed, err := exam.Parse(config.Exam{Type: "env.dir", Vars: []string{"VAR1"}})
+	assert.NoError(t, err)
+	assert.Equal(t, &EnvDir{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvIpv4AddrParse(t *testing.T) {
-    exam := &EnvIpv4Addr{}
+	exam := &EnvIpv4Addr{}
 
-    // Test invalid type
-    _, err := exam.Parse(config.Exam{Type: "invalid"})
-    assert.Error(t, err)
+	// Test invalid type
+	_, err := exam.Parse(config.Exam{Type: "invalid"})
+	assert.Error(t, err)
 
-    // Test vars not set
-    _, err = exam.Parse(config.Exam{Type: "env.ipv4"})
-    assert.Error(t, err)
+	// Test vars not set
+	_, err = exam.Parse(config.Exam{Type: "env.ipv4"})
+	assert.Error(t, err)
 
-    // Test valid config
-    parsed, err := exam.Parse(config.Exam{Type: "env.ipv4", Vars: []string{"VAR1"}})
-    assert.NoError(t, err)
-    assert.Equal(t, &EnvIpv4Addr{Vars: []string{"VAR1"}}, parsed)
+	// Test valid config
+	parsed, err := exam.Parse(config.Exam{Type: "env.ipv4", Vars: []string{"VAR1"}})
+	assert.NoError(t, err)
+	assert.Equal(t, &EnvIpv4Addr{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvIpv6AddrParse(t *testing.T) {
-    exam := &EnvIpv6Addr{}
+	exam := &EnvIpv6Addr{}
 
-    // Test invalid type
-    _, err := exam.Parse(config.Exam{Type: "invalid"})
-    assert.Error(t, err)
+	// Test invalid type
+	_, err := exam.Parse(config.Exam{Type: "invalid"})
+	assert.Error(t, err)
 
-    // Test vars not set
-    _, err = exam.Parse(config.Exam{Type: "env.ipv6"})
-    assert.Error(t, err)
+	// Test vars not set
+	_, err = exam.Parse(config.Exam{Type: "env.ipv6"})
+	assert.Error(t, err)
 
-    // Test valid config
-    parsed, err := exam.Parse(config.Exam{Type: "env.ipv6", Vars: []string{"VAR1"}})
-    assert.NoError(t, err)
-    assert.Equal(t, &EnvIpv6Addr{Vars: []string{"VAR1"}}, parsed)
+	// Test valid config
+	parsed, err := exam.Parse(config.Exam{Type: "env.ipv6", Vars: []string{"VAR1"}})
+	assert.NoError(t, err)
+	assert.Equal(t, &EnvIpv6Addr{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvIpAddrParse(t *testing.T) {
-    exam := &EnvIpAddr{}
+	exam := &EnvIpAddr{}
 
-    // Test invalid type
-    _, err := exam.Parse(config.Exam{Type: "invalid"})
-    assert.Error(t, err)
+	// Test invalid type
+	_, err := exam.Parse(config.Exam{Type: "invalid"})
+	assert.Error(t, err)
 
-    // Test vars not set
-    _, err = exam.Parse(config.Exam{Type: "env.ip"})
-    assert.Error(t, err)
+	// Test vars not set
+	_, err = exam.Parse(config.Exam{Type: "env.ip"})
+	assert.Error(t, err)
 
-    // Test valid config
-    parsed, err := exam.Parse(config.Exam{Type: "env.ip", Vars: []string{"VAR1"}})
-    assert.NoError(t, err)
-    assert.Equal(t, &EnvIpAddr{Vars: []string{"VAR1"}}, parsed)
+	// Test valid config
+	parsed, err := exam.Parse(config.Exam{Type: "env.ip", Vars: []string{"VAR1"}})
+	assert.NoError(t, err)
+	assert.Equal(t, &EnvIpAddr{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvHostnameParse(t *testing.T) {
-    exam := &EnvHostname{}
+	exam := &EnvHostname{}
 
-    // Test invalid type
-    _, err := exam.Parse(config.Exam{Type: "invalid"})
-    assert.Error(t, err)
+	// Test invalid type
+	_, err := exam.Parse(config.Exam{Type: "invalid"})
+	assert.Error(t, err)
 
-    // Test vars not set
-    _, err = exam.Parse(config.Exam{Type: "env.hostname"})
-    assert.Error(t, err)
+	// Test vars not set
+	_, err = exam.Parse(config.Exam{Type: "env.hostname"})
+	assert.Error(t, err)
 
-    // Test valid config
-    parsed, err := exam.Parse(config.Exam{Type: "env.hostname", Vars: []string{"VAR1"}, Protocol: "http"})
-    assert.NoError(t, err)
-    assert.Equal(t, &EnvHostname{Vars: []string{"VAR1"}, Protocol: "http"}, parsed)
+	// Test valid config
+	parsed, err := exam.Parse(config.Exam{Type: "env.hostname", Vars: []string{"VAR1"}, Protocol: "http"})
+	assert.NoError(t, err)
+	assert.Equal(t, &EnvHostname{Vars: []string{"VAR1"}, Protocol: "http"}, parsed)
 }

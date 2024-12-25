@@ -22,21 +22,21 @@ func Parser(ty string) (ExamParser, bool) {
 	return nil, false
 }
 
-var parsers = map[string]ExamParser {
-	"is-set": getParser[*EnvIsSet](),
-	"not-empty": getParser[*EnvIsSetNotEmpty](),
-	"regex": getParser[*EnvRegex](),
-	"options": getParser[*EnvOption](),
-	"int": getParser[*EnvInteger](),
-	"int-range": getParser[*EnvIntegerRange](),
-	"float": getParser[*EnvFloat](),
+var parsers = map[string]ExamParser{
+	"is-set":      getParser[*EnvIsSet](),
+	"not-empty":   getParser[*EnvIsSetNotEmpty](),
+	"regex":       getParser[*EnvRegex](),
+	"options":     getParser[*EnvOption](),
+	"int":         getParser[*EnvInteger](),
+	"int-range":   getParser[*EnvIntegerRange](),
+	"float":       getParser[*EnvFloat](),
 	"float-range": getParser[*EnvFloatRange](),
-	"file": getParser[*EnvFile](),
-	"dir": getParser[*EnvDir](),
-	"ipv4": getParser[*EnvIpv4Addr](),
-	"ipv6": getParser[*EnvIpv6Addr](),
-	"ip": getParser[*EnvIpAddr](),
-	"hostname": getParser[*EnvHostname](),
+	"file":        getParser[*EnvFile](),
+	"dir":         getParser[*EnvDir](),
+	"ipv4":        getParser[*EnvIpv4Addr](),
+	"ipv6":        getParser[*EnvIpv6Addr](),
+	"ip":          getParser[*EnvIpAddr](),
+	"hostname":    getParser[*EnvHostname](),
 }
 
 func getParser[E Exam]() ExamParser {
@@ -145,8 +145,8 @@ func (r *EnvIsSetNotEmpty) Examinate() (bool, error) {
 // vars: []string,
 // regex: string
 type EnvRegex struct {
-	Vars []string
-	Regex  *regexp.Regexp
+	Vars  []string
+	Regex *regexp.Regexp
 }
 
 func (r *EnvRegex) Type() string {
@@ -186,7 +186,7 @@ func (r *EnvRegex) Examinate() (bool, error) {
 			invalid = append(invalid, v)
 		}
 	}
-	
+
 	err := ""
 
 	if len(unset) > 0 {
@@ -210,7 +210,7 @@ func (r *EnvRegex) Examinate() (bool, error) {
 // vars: []string,
 // options: []string
 type EnvOption struct {
-	Vars  []string
+	Vars    []string
 	Options map[string]bool
 }
 
@@ -243,7 +243,7 @@ func (r *EnvOption) Parse(config config.Exam) (Exam, error) {
 func (r *EnvOption) Examinate() (bool, error) {
 	unset := []string{}
 	invalid := []string{}
-	
+
 	for _, v := range r.Vars {
 		if val, ok := os.LookupEnv(v); !ok {
 			unset = append(unset, v)
@@ -332,8 +332,8 @@ func (r *EnvInteger) Examinate() (bool, error) {
 // max: int
 type EnvIntegerRange struct {
 	Vars []string
-	Min    int
-	Max    int
+	Min  int
+	Max  int
 }
 
 func (r *EnvIntegerRange) Type() string {

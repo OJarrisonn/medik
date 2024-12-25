@@ -10,7 +10,7 @@ type Exam interface {
 	// Type returns the type of the exam
 	// This is used to parse the config.Exam by selecting the correct exam parser
 	Type() string
-	
+
 	// Try parses an []exams.Exam from a config.Exam
 	// Returns an error if the config.Exam is invalid
 	Parse(config config.Exam) (Exam, error)
