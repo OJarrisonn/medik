@@ -4,7 +4,8 @@
     "go@1.23",
     "golangci-lint@1.62",
     "gum@0.14.5",
-    "delve@1.23"
+    "delve@1.23",
+    "tparse@0.16"
   ],
   "shell": {
     "init_hook": [

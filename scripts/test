@@ -3,6 +3,9 @@
 COVERAGE_FILE=coverage/coverage.out
 COVERAGE_HTML=coverage/coverage.html
 COVERAGE=false
+MODULEPATH="github.com/OJarrisonn/"
+
+TPARSE="tparse -all -sort name -trimpath ${MODULEPATH}"
 
 for arg in "$@"; do
 	if [[ "$arg" == "--coverage" ]]; then
@@ -15,14 +18,14 @@ gum log -sl info "Running tests for medik"
 SUCCESS=0
 
 if [[ "$COVERAGE" == true ]]; then
-    go test -v -cover -coverprofile=$COVERAGE_FILE ./ ./pkg/...
+    go test -v -cover -coverprofile=$COVERAGE_FILE -json ./ ./pkg/... | ${TPARSE}
     SUCCESS=$?
     if [ $SUCCESS -eq 0 ]; then
         gum log -sl info "Generating coverage report"
         go tool cover -html=$COVERAGE_FILE -o $COVERAGE_HTML
     fi
 else
-    go test -v ./ ./pkg/...
+    go test -v ./ ./pkg/... | ${TPARSE}
     SUCCESS=$?
 fi
 
