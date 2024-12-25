@@ -1,4 +1,4 @@
-package exams
+package env
 
 import (
 	"regexp"
@@ -11,13 +11,13 @@ import (
 
 func TestEnvParsersCollection(t *testing.T) {
 	// Inexistent parser
-	parser, ok := envParser("inexistent")
+	parser, ok := EnvParser("inexistent")
 
 	assert.Nil(t, parser)
 	assert.False(t, ok)
 
 	// Existing parsers
-	parser, ok = envParser("is-set")
+	parser, ok = EnvParser("is-set")
 
 	assert.NotNil(t, parser)
 	assert.True(t, ok)
@@ -33,20 +33,20 @@ func TestEnvParsersContainsAll(t *testing.T) {
 	}
 
 	known := []string{
-		(&EnvIsSet{}).Type(),
-		(&EnvIsSetNotEmpty{}).Type(),
-		(&EnvRegex{}).Type(),
-		(&EnvOption{}).Type(),
-		(&EnvInteger{}).Type(),
-		(&EnvIntegerRange{}).Type(),
-		(&EnvFloat{}).Type(),
-		(&EnvFloatRange{}).Type(),
-		(&EnvFile{}).Type(),
-		(&EnvDir{}).Type(),
-		(&EnvIpv4Addr{}).Type(),
-		(&EnvIpv6Addr{}).Type(),
-		(&EnvIpAddr{}).Type(),
-		(&EnvHostname{}).Type(),
+		(&IsSet{}).Type(),
+		(&NotEmpty{}).Type(),
+		(&Regex{}).Type(),
+		(&Option{}).Type(),
+		(&Int{}).Type(),
+		(&IntRange{}).Type(),
+		(&Float{}).Type(),
+		(&FloatRange{}).Type(),
+		(&File{}).Type(),
+		(&Dir{}).Type(),
+		(&Ipv4{}).Type(),
+		(&Ipv6{}).Type(),
+		(&Ip{}).Type(),
+		(&Hostname{}).Type(),
 	}
 
 	for i, k := range known {
@@ -57,7 +57,7 @@ func TestEnvParsersContainsAll(t *testing.T) {
 }
 
 func TestEnvIsSet(t *testing.T) {
-	exam := &EnvIsSet{Vars: []string{"VAR1", "VAR2"}}
+	exam := &IsSet{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -73,7 +73,7 @@ func TestEnvIsSet(t *testing.T) {
 }
 
 func TestEnvIsSetNotEmpty(t *testing.T) {
-	exam := &EnvIsSetNotEmpty{Vars: []string{"VAR1", "VAR2"}}
+	exam := &NotEmpty{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -97,7 +97,7 @@ func TestEnvIsSetNotEmpty(t *testing.T) {
 
 func TestEnvRegex(t *testing.T) {
 	regex, _ := regexp.Compile(`^value\d$`)
-	exam := &EnvRegex{Vars: []string{"VAR1", "VAR2"}, Regex: regex}
+	exam := &Regex{Vars: []string{"VAR1", "VAR2"}, Regex: regex}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -120,7 +120,7 @@ func TestEnvRegex(t *testing.T) {
 
 func TestEnvOption(t *testing.T) {
 	options := map[string]bool{"option1": true, "option2": true}
-	exam := &EnvOption{Vars: []string{"VAR1", "VAR2"}, Options: options}
+	exam := &Option{Vars: []string{"VAR1", "VAR2"}, Options: options}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -142,7 +142,7 @@ func TestEnvOption(t *testing.T) {
 }
 
 func TestEnvInteger(t *testing.T) {
-	exam := &EnvInteger{Vars: []string{"VAR1", "VAR2"}}
+	exam := &Int{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -164,7 +164,7 @@ func TestEnvInteger(t *testing.T) {
 }
 
 func TestEnvIntegerRange(t *testing.T) {
-	exam := &EnvIntegerRange{Vars: []string{"VAR1", "VAR2"}, Min: 10, Max: 100}
+	exam := &IntRange{Vars: []string{"VAR1", "VAR2"}, Min: 10, Max: 100}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -192,7 +192,7 @@ func TestEnvIntegerRange(t *testing.T) {
 }
 
 func TestEnvFloat(t *testing.T) {
-	exam := &EnvFloat{Vars: []string{"VAR1", "VAR2"}}
+	exam := &Float{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -214,7 +214,7 @@ func TestEnvFloat(t *testing.T) {
 }
 
 func TestEnvFloatRange(t *testing.T) {
-	exam := &EnvFloatRange{Vars: []string{"VAR1", "VAR2"}, Min: 10.5, Max: 100.5}
+	exam := &FloatRange{Vars: []string{"VAR1", "VAR2"}, Min: 10.5, Max: 100.5}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -242,7 +242,7 @@ func TestEnvFloatRange(t *testing.T) {
 }
 
 func TestEnvFile(t *testing.T) {
-	exam := &EnvFile{Vars: []string{"VAR1", "VAR2"}}
+	exam := &File{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -264,7 +264,7 @@ func TestEnvFile(t *testing.T) {
 }
 
 func TestEnvDir(t *testing.T) {
-	exam := &EnvDir{Vars: []string{"VAR1", "VAR2"}}
+	exam := &Dir{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -286,7 +286,7 @@ func TestEnvDir(t *testing.T) {
 }
 
 func TestEnvIpv4Addr(t *testing.T) {
-	exam := &EnvIpv4Addr{Vars: []string{"VAR1", "VAR2"}}
+	exam := &Ipv4{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -308,7 +308,7 @@ func TestEnvIpv4Addr(t *testing.T) {
 }
 
 func TestEnvIpv6Addr(t *testing.T) {
-	exam := &EnvIpv6Addr{Vars: []string{"VAR1", "VAR2"}}
+	exam := &Ipv6{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -330,7 +330,7 @@ func TestEnvIpv6Addr(t *testing.T) {
 }
 
 func TestEnvIpAddr(t *testing.T) {
-	exam := &EnvIpAddr{Vars: []string{"VAR1", "VAR2"}}
+	exam := &Ip{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -352,7 +352,7 @@ func TestEnvIpAddr(t *testing.T) {
 }
 
 func TestEnvHostname(t *testing.T) {
-	exam := &EnvHostname{Vars: []string{"VAR1", "VAR2"}, Protocol: "http"}
+	exam := &Hostname{Vars: []string{"VAR1", "VAR2"}, Protocol: "http"}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -372,7 +372,7 @@ func TestEnvHostname(t *testing.T) {
 	assert.True(t, result)
 	assert.NoError(t, err)
 
-	exam2 := &EnvHostname{Vars: []string{"VAR1", "VAR2"}, Protocol: ""}
+	exam2 := &Hostname{Vars: []string{"VAR1", "VAR2"}, Protocol: ""}
 	t.Setenv("VAR1", "example.com")
 	t.Setenv("VAR2", "tcp://example.com")
 	result, err = exam2.Examinate()
@@ -385,7 +385,7 @@ func TestEnvHostname(t *testing.T) {
 }
 
 func TestEnvIsSetParse(t *testing.T) {
-	exam := &EnvIsSet{}
+	exam := &IsSet{}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -398,11 +398,11 @@ func TestEnvIsSetParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.is-set", Vars: []string{"VAR1"}})
 	assert.NoError(t, err)
-	assert.Equal(t, &EnvIsSet{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &IsSet{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvIsSetNotEmptyParse(t *testing.T) {
-	exam := &EnvIsSetNotEmpty{}
+	exam := &NotEmpty{}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -415,11 +415,11 @@ func TestEnvIsSetNotEmptyParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.not-empty", Vars: []string{"VAR1"}})
 	assert.NoError(t, err)
-	assert.Equal(t, &EnvIsSetNotEmpty{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &NotEmpty{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvRegexParse(t *testing.T) {
-	exam := &EnvRegex{}
+	exam := &Regex{}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -444,7 +444,7 @@ func TestEnvRegexParse(t *testing.T) {
 }
 
 func TestEnvOptionParse(t *testing.T) {
-	exam := &EnvOption{}
+	exam := &Option{}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -465,7 +465,7 @@ func TestEnvOptionParse(t *testing.T) {
 }
 
 func TestEnvIntegerParse(t *testing.T) {
-	exam := &EnvInteger{}
+	exam := &Int{}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -478,11 +478,11 @@ func TestEnvIntegerParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.int", Vars: []string{"VAR1"}})
 	assert.NoError(t, err)
-	assert.Equal(t, &EnvInteger{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &Int{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvIntegerRangeParse(t *testing.T) {
-	exam := &EnvIntegerRange{}
+	exam := &IntRange{}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -503,11 +503,11 @@ func TestEnvIntegerRangeParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.int-range", Vars: []string{"VAR1"}, Min: 0, Max: 10})
 	assert.NoError(t, err)
-	assert.Equal(t, &EnvIntegerRange{Vars: []string{"VAR1"}, Min: 0, Max: 10}, parsed)
+	assert.Equal(t, &IntRange{Vars: []string{"VAR1"}, Min: 0, Max: 10}, parsed)
 }
 
 func TestEnvFloatParse(t *testing.T) {
-	exam := &EnvFloat{}
+	exam := &Float{}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -520,11 +520,11 @@ func TestEnvFloatParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.float", Vars: []string{"VAR1"}})
 	assert.NoError(t, err)
-	assert.Equal(t, &EnvFloat{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &Float{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvFloatRangeParse(t *testing.T) {
-	exam := &EnvFloatRange{}
+	exam := &FloatRange{}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -545,11 +545,11 @@ func TestEnvFloatRangeParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.float-range", Vars: []string{"VAR1"}, Min: 0.0, Max: 10.0})
 	assert.NoError(t, err)
-	assert.Equal(t, &EnvFloatRange{Vars: []string{"VAR1"}, Min: 0.0, Max: 10.0}, parsed)
+	assert.Equal(t, &FloatRange{Vars: []string{"VAR1"}, Min: 0.0, Max: 10.0}, parsed)
 }
 
 func TestEnvFileParse(t *testing.T) {
-	exam := &EnvFile{}
+	exam := &File{}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -562,11 +562,11 @@ func TestEnvFileParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.file", Vars: []string{"VAR1"}})
 	assert.NoError(t, err)
-	assert.Equal(t, &EnvFile{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &File{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvDirParse(t *testing.T) {
-	exam := &EnvDir{}
+	exam := &Dir{}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -579,11 +579,11 @@ func TestEnvDirParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.dir", Vars: []string{"VAR1"}})
 	assert.NoError(t, err)
-	assert.Equal(t, &EnvDir{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &Dir{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvIpv4AddrParse(t *testing.T) {
-	exam := &EnvIpv4Addr{}
+	exam := &Ipv4{}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -596,11 +596,11 @@ func TestEnvIpv4AddrParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.ipv4", Vars: []string{"VAR1"}})
 	assert.NoError(t, err)
-	assert.Equal(t, &EnvIpv4Addr{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &Ipv4{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvIpv6AddrParse(t *testing.T) {
-	exam := &EnvIpv6Addr{}
+	exam := &Ipv6{}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -613,11 +613,11 @@ func TestEnvIpv6AddrParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.ipv6", Vars: []string{"VAR1"}})
 	assert.NoError(t, err)
-	assert.Equal(t, &EnvIpv6Addr{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &Ipv6{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvIpAddrParse(t *testing.T) {
-	exam := &EnvIpAddr{}
+	exam := &Ip{}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -630,11 +630,11 @@ func TestEnvIpAddrParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.ip", Vars: []string{"VAR1"}})
 	assert.NoError(t, err)
-	assert.Equal(t, &EnvIpAddr{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &Ip{Vars: []string{"VAR1"}}, parsed)
 }
 
 func TestEnvHostnameParse(t *testing.T) {
-	exam := &EnvHostname{}
+	exam := &Hostname{}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -647,5 +647,5 @@ func TestEnvHostnameParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.hostname", Vars: []string{"VAR1"}, Protocol: "http"})
 	assert.NoError(t, err)
-	assert.Equal(t, &EnvHostname{Vars: []string{"VAR1"}, Protocol: "http"}, parsed)
+	assert.Equal(t, &Hostname{Vars: []string{"VAR1"}, Protocol: "http"}, parsed)
 }

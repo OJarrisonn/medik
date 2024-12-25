@@ -29,12 +29,29 @@ type Exam interface {
 // A type is a string in the format of "category.kind"
 // Returns a bool indicating if the parser was found
 func Parser(t string) (ExamParser, bool) {
-	cat, kind, _ := strings.Cut(t, ".")
+	cat, _, _ := strings.Cut(t, ".")
 
 	switch cat {
-	case "env":
-		return envParser(kind)
 	default:
 		return nil, false
 	}
+}
+
+func GetParserForType[E Exam]() ExamParser {
+	var e E
+	return e.Parse
+}
+
+func GetTypeForType[E Exam]() string {
+	var e E
+	return e.Type()
+}
+
+type WrongExamParserError struct {
+	Got,
+	Expected string
+}
+
+func (e *WrongExamParserError) Error() string {
+	return "wrong exam parser called expected " + e.Expected + " got " + e.Got
 }

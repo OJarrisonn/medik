@@ -2,7 +2,6 @@
     "linters": {
         "enable": [
             "goconst",
-            "dupl",
             "nilerr",
             "nilnil",
             "nonamedreturns",
@@ -11,16 +10,6 @@
             "unparam",
             "usestdlibvars",
             "wastedassign"
-        ]
-    },
-    "issues": {
-        "exclude-rules": [
-            {
-                "path": "(.+)_test\\.go",
-                "linters": [
-                    "dupl"
-                ]
-            }
         ]
     }
 }

@@ -17,7 +17,7 @@ func main() {
 	}
 
 	content := string(data)
-	
+
 	//fmt.Println(content)
 
 	medik, err := config.Parse(content)
