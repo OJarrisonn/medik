@@ -39,7 +39,7 @@ func (r *Ip) Examinate() (bool, []error) {
 		ipv6 := &Ipv6{Vars: []string{v}}
 
 		if ok, _ := ipv4.Examinate(); !ok {
-			if ok, _ := ipv6.Examinate(); !ok {	
+			if ok, _ := ipv6.Examinate(); !ok {
 				hasError = true
 				errors[i] = &UnsetEnvVarError{Var: v}
 			}

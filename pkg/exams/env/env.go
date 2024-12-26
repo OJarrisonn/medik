@@ -50,8 +50,8 @@ func (e *UnsetEnvVarError) Error() string {
 }
 
 type InvalidEnvVarError struct {
-	Var string
-	Value string
+	Var     string
+	Value   string
 	Message string
 }
 

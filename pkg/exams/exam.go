@@ -51,7 +51,7 @@ func (e *WrongExamParserError) Error() string {
 // An error to describe a missing field in a config.Exam during its parsing
 type MissingFieldError struct {
 	Field,
-	Exam  string
+	Exam string
 }
 
 func (e *MissingFieldError) Error() string {
