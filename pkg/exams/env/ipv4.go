@@ -1,7 +1,6 @@
 package env
 
 import (
-	"fmt"
 	"os"
 	"regexp"
 
@@ -33,32 +32,25 @@ func (r *Ipv4) Parse(config config.Exam) (exams.Exam, error) {
 	return &Ipv4{config.Vars}, nil
 }
 
-func (r *Ipv4) Examinate() (bool, error) {
-	unset := []string{}
-	invalid := []string{}
+func (r *Ipv4) Examinate() (bool, []error) {
+	errors := make([]error, len(r.Vars))
+	hasError := false
+
 	regexp := regexp.MustCompile(`^(\d{1,3}\.){3}\d{1,3}$`)
 
-	for _, v := range r.Vars {
+	for i, v := range r.Vars {
 		val, ok := os.LookupEnv(v)
 		if !ok {
-			unset = append(unset, v)
+			hasError = true
+			errors[i] = &UnsetEnvVarError{Var: v}
 		} else if !regexp.MatchString(val) {
-			invalid = append(invalid, v)
+			hasError = true
+			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: "value should be a valid IPv4 address"}
 		}
 	}
 
-	err := ""
-
-	if len(unset) > 0 {
-		err += fmt.Sprintf("environment variables not set %v\n", unset)
-	}
-
-	if len(invalid) > 0 {
-		err += fmt.Sprintf("environment variables not set to valid IPv4 addresses %v\n", invalid)
-	}
-
-	if err != "" {
-		return false, fmt.Errorf("%v", err)
+	if hasError {
+		return false, errors
 	}
 
 	return true, nil

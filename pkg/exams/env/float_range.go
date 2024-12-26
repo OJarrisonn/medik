@@ -58,39 +58,27 @@ func (r *FloatRange) Parse(config config.Exam) (exams.Exam, error) {
 	return &FloatRange{config.Vars, config.Min.(float64), config.Max.(float64)}, nil
 }
 
-func (r *FloatRange) Examinate() (bool, error) {
-	unset := []string{}
-	out_of_bound := []string{}
-	not_float := []string{}
+func (r *FloatRange) Examinate() (bool, []error) {
+	errors := make([]error, len(r.Vars))
+	hasError := false
 
-	for _, v := range r.Vars {
+	for i, v := range r.Vars {
 		val, ok := os.LookupEnv(v)
 
 		if !ok {
-			unset = append(unset, v)
+			hasError = true
+			errors[i] = &UnsetEnvVarError{Var: v}
 		} else if num, err := strconv.ParseFloat(val, 64); err != nil {
-			not_float = append(not_float, v)
+			hasError = true
+			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: err.Error()}
 		} else if num < r.Min || num > r.Max {
-			out_of_bound = append(out_of_bound, v)
+			hasError = true
+			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: fmt.Sprintf("value should be in the range [%v,%v]", r.Min, r.Max)}
 		}
 	}
 
-	err := ""
-
-	if len(unset) > 0 {
-		err += fmt.Sprintf("environment variables not set %v\n", unset)
-	}
-
-	if len(not_float) > 0 {
-		err += fmt.Sprintf("environment variables not set to float numbers %v\n", not_float)
-	}
-
-	if len(out_of_bound) > 0 {
-		err += fmt.Sprintf("environment variables not in the float range [%v,%v] %v\n", r.Min, r.Max, out_of_bound)
-	}
-
-	if err != "" {
-		return false, fmt.Errorf("%v", err)
+	if hasError {
+		return false, errors
 	}
 
 	return true, nil

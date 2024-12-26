@@ -1,7 +1,6 @@
 package env
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
@@ -33,30 +32,22 @@ func (r *Float) Parse(config config.Exam) (exams.Exam, error) {
 	return &Float{config.Vars}, nil
 }
 
-func (r *Float) Examinate() (bool, error) {
-	unset := []string{}
-	not_float := []string{}
+func (r *Float) Examinate() (bool, []error) {
+	errors := make([]error, len(r.Vars))
+	hasError := false
 
-	for _, v := range r.Vars {
+	for i, v := range r.Vars {
 		if val, ok := os.LookupEnv(v); !ok {
-			unset = append(unset, v)
+			hasError = true
+			errors[i] = &UnsetEnvVarError{Var: v}
 		} else if _, err := strconv.ParseFloat(val, 64); err != nil {
-			not_float = append(not_float, v)
+			hasError = true
+			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: err.Error()}
 		}
 	}
 
-	err := ""
-
-	if len(unset) > 0 {
-		err += fmt.Sprintf("environment variables not set %v\n", unset)
-	}
-
-	if len(not_float) > 0 {
-		err += fmt.Sprintf("environment variables not set to float numbers %v\n", not_float)
-	}
-
-	if err != "" {
-		return false, fmt.Errorf("%v", err)
+	if hasError {
+		return false, errors
 	}
 
 	return true, nil

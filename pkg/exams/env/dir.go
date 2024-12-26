@@ -1,7 +1,6 @@
 package env
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/OJarrisonn/medik/pkg/config"
@@ -32,32 +31,28 @@ func (r *Dir) Parse(config config.Exam) (exams.Exam, error) {
 	return &Dir{config.Vars}, nil
 }
 
-func (r *Dir) Examinate() (bool, error) {
-	unset := []string{}
-	invalid := []string{}
+func (r *Dir) Examinate() (bool, []error) {
+	errors := make([]error, len(r.Vars))
+	hasError := false
 
-	for _, v := range r.Vars {
+	for i, v := range r.Vars {
 		val, ok := os.LookupEnv(v)
 		if !ok {
-			unset = append(unset, v)
+			hasError = true
+			errors[i] = &UnsetEnvVarError{Var: v}
 		} else if stat, err := os.Stat(val); err != nil || !stat.IsDir() {
-			invalid = append(invalid, v)
+			hasError = true
+			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: r.ErrorMessage(err)}
 		}
 	}
 
-	err := ""
-
-	if len(unset) > 0 {
-		err += fmt.Sprintf("environment variables not set %v\n", unset)
-	}
-
-	if len(invalid) > 0 {
-		err += fmt.Sprintf("environment variables not pointing to valid directories %v\n", invalid)
-	}
-
-	if err != "" {
-		return false, fmt.Errorf("%v", err)
+	if hasError {
+		return false, errors
 	}
 
 	return true, nil
+}
+
+func (r *Dir) ErrorMessage(err error) string {
+	return "value should point to a existing directory. " + err.Error()
 }

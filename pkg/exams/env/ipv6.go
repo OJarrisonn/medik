@@ -1,7 +1,6 @@
 package env
 
 import (
-	"fmt"
 	"os"
 	"regexp"
 
@@ -33,32 +32,25 @@ func (r *Ipv6) Parse(config config.Exam) (exams.Exam, error) {
 	return &Ipv6{config.Vars}, nil
 }
 
-func (r *Ipv6) Examinate() (bool, error) {
-	unset := []string{}
-	invalid := []string{}
+func (r *Ipv6) Examinate() (bool, []error) {
+	errors := make([]error, len(r.Vars))
+	hasError := false
+
 	regexp := regexp.MustCompile(`^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$`)
 
-	for _, v := range r.Vars {
+	for i, v := range r.Vars {
 		val, ok := os.LookupEnv(v)
 		if !ok {
-			unset = append(unset, v)
+			hasError = true
+			errors[i] = &UnsetEnvVarError{Var: v}
 		} else if !regexp.MatchString(val) {
-			invalid = append(invalid, v)
+			hasError = true
+			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: "value should be a valid IPv6 address"}
 		}
 	}
 
-	err := ""
-
-	if len(unset) > 0 {
-		err += fmt.Sprintf("environment variables not set %v\n", unset)
-	}
-
-	if len(invalid) > 0 {
-		err += fmt.Sprintf("environment variables not set to valid IPv6 addresses %v\n", invalid)
-	}
-
-	if err != "" {
-		return false, fmt.Errorf("%v", err)
+	if hasError {
+		return false, errors
 	}
 
 	return true, nil

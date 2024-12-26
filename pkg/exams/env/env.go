@@ -40,3 +40,21 @@ type VarsUnsetError struct {
 func (e *VarsUnsetError) Error() string {
 	return "`vars` field is not set for exam " + e.Exam
 }
+
+type UnsetEnvVarError struct {
+	Var string
+}
+
+func (e *UnsetEnvVarError) Error() string {
+	return "environment variable " + e.Var + " is not set"
+}
+
+type InvalidEnvVarError struct {
+	Var string
+	Value string
+	Message string
+}
+
+func (e *InvalidEnvVarError) Error() string {
+	return "environment variable " + e.Var + " is set to '" + e.Value + "' which is invalid: " + e.Message
+}

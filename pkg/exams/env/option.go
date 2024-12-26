@@ -44,31 +44,27 @@ func (r *Option) Parse(config config.Exam) (exams.Exam, error) {
 	return &Option{config.Vars, options}, nil
 }
 
-func (r *Option) Examinate() (bool, error) {
-	unset := []string{}
-	invalid := []string{}
+func (r *Option) Examinate() (bool, []error) {
+	errors := make([]error, len(r.Vars))
+	hasError := false
 
-	for _, v := range r.Vars {
+	for i, v := range r.Vars {
 		if val, ok := os.LookupEnv(v); !ok {
-			unset = append(unset, v)
+			hasError = true
+			errors[i] = &UnsetEnvVarError{Var: v}
 		} else if _, ok := r.Options[val]; !ok {
-			invalid = append(invalid, v)
+			hasError = true
+			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: r.ErrorMessage()}
 		}
 	}
 
-	err := ""
-
-	if len(unset) > 0 {
-		err += fmt.Sprintf("environment variables not set %v\n", unset)
-	}
-
-	if len(invalid) > 0 {
-		err += fmt.Sprintf("environment variables not matching options %v\n", invalid)
-	}
-
-	if err != "" {
-		return false, fmt.Errorf("%v", err)
+	if hasError {
+		return false, errors
 	}
 
 	return true, nil
+}
+
+func (r *Option) ErrorMessage() string {
+	return fmt.Sprintf("value should be one of %v", r.Options)
 }

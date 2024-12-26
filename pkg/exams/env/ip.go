@@ -1,8 +1,6 @@
 package env
 
 import (
-	"fmt"
-
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
 )
@@ -32,33 +30,24 @@ func (r *Ip) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 // TODO: Refactor this
-func (r *Ip) Examinate() (bool, error) {
-	unset := []string{}
-	invalid := []string{}
+func (r *Ip) Examinate() (bool, []error) {
+	errors := make([]error, len(r.Vars))
+	hasError := false
 
-	for _, v := range r.Vars {
+	for i, v := range r.Vars {
 		ipv4 := &Ipv4{Vars: []string{v}}
 		ipv6 := &Ipv6{Vars: []string{v}}
 
 		if ok, _ := ipv4.Examinate(); !ok {
-			if ok, _ := ipv6.Examinate(); !ok {
-				invalid = append(invalid, v)
+			if ok, _ := ipv6.Examinate(); !ok {	
+				hasError = true
+				errors[i] = &UnsetEnvVarError{Var: v}
 			}
 		}
 	}
 
-	err := ""
-
-	if len(unset) > 0 {
-		err += fmt.Sprintf("environment variables not set %v\n", unset)
-	}
-
-	if len(invalid) > 0 {
-		err += fmt.Sprintf("environment variables not set to valid IP addresses %v\n", invalid)
-	}
-
-	if err != "" {
-		return false, fmt.Errorf("%v", err)
+	if hasError {
+		return false, errors
 	}
 
 	return true, nil

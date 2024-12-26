@@ -47,10 +47,12 @@ func main() {
 
 		//fmt.Printf("%+v\n", exam)
 
-		enforced, err := exam.Examinate()
+		enforced, errs := exam.Examinate()
 
-		if err != nil {
-			fmt.Printf("failed to examinate: %v\n", err)
+		if errs != nil {
+			for _, e := range errs {
+				fmt.Printf("error: %v\n", e)
+			}
 			continue
 		}
 

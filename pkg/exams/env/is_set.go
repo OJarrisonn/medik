@@ -1,7 +1,6 @@
 package env
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/OJarrisonn/medik/pkg/config"
@@ -32,17 +31,19 @@ func (r *IsSet) Parse(config config.Exam) (exams.Exam, error) {
 	return &IsSet{config.Vars}, nil
 }
 
-func (r *IsSet) Examinate() (bool, error) {
-	unset := []string{}
+func (r *IsSet) Examinate() (bool, []error) {
+	errors := make([]error, len(r.Vars))
+	hasError := false
 
-	for _, v := range r.Vars {
+	for i, v := range r.Vars {
 		if _, ok := os.LookupEnv(v); !ok {
-			unset = append(unset, v)
+			hasError = true
+			errors[i] = &UnsetEnvVarError{Var: v}
 		}
 	}
 
-	if len(unset) > 0 {
-		return false, fmt.Errorf("environment variables not set %v", unset)
+	if hasError {
+		return false, errors
 	}
 
 	return true, nil

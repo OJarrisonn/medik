@@ -1,7 +1,6 @@
 package env
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
@@ -34,31 +33,27 @@ func (r *Int) Parse(config config.Exam) (exams.Exam, error) {
 	return &Int{config.Vars}, nil
 }
 
-func (r *Int) Examinate() (bool, error) {
-	unset := []string{}
-	invalid := []string{}
+func (r *Int) Examinate() (bool, []error) {
+	errors := make([]error, len(r.Vars))
+	hasError := false
 
-	for _, v := range r.Vars {
+	for i, v := range r.Vars {
 		if val, ok := os.LookupEnv(v); !ok {
-			unset = append(unset, v)
+			hasError = true
+			errors[i] = &UnsetEnvVarError{Var: v}
 		} else if _, err := strconv.Atoi(val); err != nil {
-			invalid = append(invalid, v)
+			hasError = true
+			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: r.ErrorMessage(err)}
 		}
 	}
 
-	err := ""
-
-	if len(unset) > 0 {
-		err += fmt.Sprintf("environment variables not set %v\n", unset)
-	}
-
-	if len(invalid) > 0 {
-		err += fmt.Sprintf("environment variables not set to integer numbers %v\n", invalid)
-	}
-
-	if err != "" {
-		return false, fmt.Errorf("%v", err)
+	if hasError {
+		return false, errors
 	}
 
 	return true, nil
+}
+
+func (r *Int) ErrorMessage(err error) string {
+	return "value should be a number. " + err.Error()
 }

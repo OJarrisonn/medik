@@ -58,38 +58,30 @@ func (r *IntRange) Parse(config config.Exam) (exams.Exam, error) {
 	return &IntRange{config.Vars, config.Min.(int), config.Max.(int)}, nil
 }
 
-func (r *IntRange) Examinate() (bool, error) {
-	unset := []string{}
-	not_integer := []string{}
-	out_of_bound := []string{}
+func (r *IntRange) Examinate() (bool, []error) {
+	errors := make([]error, len(r.Vars))
+	hasError := false
 
-	for _, v := range r.Vars {
+	for i, v := range r.Vars {
 		if val, ok := os.LookupEnv(v); !ok {
-			unset = append(unset, v)
+			hasError = true
+			errors[i] = &UnsetEnvVarError{Var: v}
 		} else if num, err := strconv.Atoi(val); err != nil {
-			not_integer = append(not_integer, v)
+			hasError = true
+			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: r.ErrorMessage(err)}
 		} else if num < r.Min || num > r.Max {
-			out_of_bound = append(out_of_bound, v)
+			hasError = true
+			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: fmt.Sprintf("value should be in the range [%v,%v]", r.Min, r.Max)}
 		}
 	}
 
-	err := ""
-
-	if len(unset) > 0 {
-		err += fmt.Sprintf("environment variables not set %v\n", unset)
-	}
-
-	if len(not_integer) > 0 {
-		err += fmt.Sprintf("environment variables not set to integer numbers %v\n", not_integer)
-	}
-
-	if len(out_of_bound) > 0 {
-		err += fmt.Sprintf("environment variables not in the integer range [%v,%v] %v\n", r.Min, r.Max, out_of_bound)
-	}
-
-	if err != "" {
-		return false, fmt.Errorf("%v", err)
+	if hasError {
+		return false, errors
 	}
 
 	return true, nil
+}
+
+func (r *IntRange) ErrorMessage(err error) string {
+	return "value should be an integer. " + err.Error()
 }
