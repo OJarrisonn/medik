@@ -15,7 +15,7 @@ var rootCmd = &cobra.Command{
 	Version: medik.Version,
 	Short:   medik.Description,
 	Args:    cobra.ArbitraryArgs,
-	RunE:    run,
+	Run:     run,
 }
 
 var ConfigFile string
@@ -35,11 +35,12 @@ func Execute() {
 	}
 }
 
-func run(cmd *cobra.Command, args []string) error {
+func run(cmd *cobra.Command, args []string) {
 	cfg, err := loadConfig()
 
 	if err != nil {
-		return err
+		fmt.Printf("Error loading config: %s\n", err)
+		os.Exit(1)
 	}
 
 	success, errs := runner.Run(cfg, args)
@@ -50,11 +51,9 @@ func run(cmd *cobra.Command, args []string) error {
 
 	if success {
 		fmt.Println("Environment is healthy")
-		return nil
 	} else {
 		fmt.Println("Environment is unhealthy")
 		os.Exit(1)
-		return nil
 	}
 }
 
