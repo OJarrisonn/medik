@@ -2,7 +2,6 @@ package env
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 
 	"github.com/OJarrisonn/medik/pkg/config"
@@ -59,27 +58,21 @@ func (r *FloatRange) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *FloatRange) Examinate() (bool, []error) {
-	errors := make([]error, len(r.Vars))
-	hasError := false
+	var f = &Float{Vars: r.Vars}
 
-	for i, v := range r.Vars {
-		val, ok := os.LookupEnv(v)
+	var withinRange = func() (bool, []error) {
+		return DefaultExaminate(r.Vars, func(name string, value string) (bool, error) {
+			num, _ := strconv.ParseFloat(value, 64)
+			if num < r.Min || num > r.Max {
+				return false, fmt.Errorf("value should be in the range [%v,%v]", r.Min, r.Max)
+			}
 
-		if !ok {
-			hasError = true
-			errors[i] = &UnsetEnvVarError{Var: v}
-		} else if num, err := strconv.ParseFloat(val, 64); err != nil {
-			hasError = true
-			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: err.Error()}
-		} else if num < r.Min || num > r.Max {
-			hasError = true
-			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: fmt.Sprintf("value should be in the range [%v,%v]", r.Min, r.Max)}
-		}
+			return true, nil
+		})
 	}
 
-	if hasError {
-		return false, errors
-	}
-
-	return true, nil
+	return exams.CompoundExaminate([]func() (bool, []error){
+		f.Examinate,
+		withinRange,
+	})
 }

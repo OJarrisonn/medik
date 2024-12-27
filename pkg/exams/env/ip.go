@@ -31,24 +31,11 @@ func (r *Ip) Parse(config config.Exam) (exams.Exam, error) {
 
 // TODO: Refactor this
 func (r *Ip) Examinate() (bool, []error) {
-	errors := make([]error, len(r.Vars))
-	hasError := false
+	ipv4 := &Ipv4{Vars: r.Vars}
+	ipv6 := &Ipv6{Vars: r.Vars}
 
-	for i, v := range r.Vars {
-		ipv4 := &Ipv4{Vars: []string{v}}
-		ipv6 := &Ipv6{Vars: []string{v}}
-
-		if ok, _ := ipv4.Examinate(); !ok {
-			if ok, _ := ipv6.Examinate(); !ok {
-				hasError = true
-				errors[i] = &UnsetEnvVarError{Var: v}
-			}
-		}
-	}
-
-	if hasError {
-		return false, errors
-	}
-
-	return true, nil
+	return exams.EitherExaminate([]func() (bool, []error){
+		ipv4.Examinate,
+		ipv6.Examinate,
+	})
 }

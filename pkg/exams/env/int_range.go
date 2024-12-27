@@ -2,7 +2,6 @@ package env
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 
 	"github.com/OJarrisonn/medik/pkg/config"
@@ -59,29 +58,21 @@ func (r *IntRange) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *IntRange) Examinate() (bool, []error) {
-	errors := make([]error, len(r.Vars))
-	hasError := false
+	var i = &Int{Vars: r.Vars}
 
-	for i, v := range r.Vars {
-		if val, ok := os.LookupEnv(v); !ok {
-			hasError = true
-			errors[i] = &UnsetEnvVarError{Var: v}
-		} else if num, err := strconv.Atoi(val); err != nil {
-			hasError = true
-			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: r.ErrorMessage(err)}
-		} else if num < r.Min || num > r.Max {
-			hasError = true
-			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: fmt.Sprintf("value should be in the range [%v,%v]", r.Min, r.Max)}
-		}
+	var withinRange = func() (bool, []error) {
+		return DefaultExaminate(r.Vars, func(name string, value string) (bool, error) {
+			num, _ := strconv.Atoi(value)
+			if num < r.Min || num > r.Max {
+				return false, fmt.Errorf("value should be in the range [%v,%v]", r.Min, r.Max)
+			}
+
+			return true, nil
+		})
 	}
 
-	if hasError {
-		return false, errors
-	}
-
-	return true, nil
-}
-
-func (r *IntRange) ErrorMessage(err error) string {
-	return "value should be an integer. " + err.Error()
+	return exams.CompoundExaminate([]func() (bool, []error){
+		i.Examinate,
+		withinRange,
+	})
 }

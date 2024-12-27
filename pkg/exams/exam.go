@@ -68,3 +68,48 @@ type FieldValueError struct {
 func (e *FieldValueError) Error() string {
 	return "invalid value '" + e.Value + "' for field `" + e.Field + "` in exam " + e.Exam + ": " + e.Message
 }
+
+// A function that combines multiple validation functions.
+// The functions are evaluated in order and short-circuited. It means that if one of the functions returns false,
+// the `CompoundExaminate` will return immediately with the errors found until that point.
+func CompoundExaminate(validate []func() (bool, []error)) (bool, []error) {
+	errors := []error{}
+	for _, v := range validate {
+		valid, err := v()
+		if err != nil {
+			errors = append(errors, err...)
+		}
+		if !valid {
+			return false, errors
+		}
+	}
+
+	if len(errors) == 0 {
+		return true, nil
+	}
+
+	return true, errors
+}
+
+// A function that combines multiple validation functions.
+// The functions are evaluated in order and short-circuited. It means that if one of the functions returns true,
+// the `CompoundExaminate` will return immediately with the errors found only in the matching validation function.
+// If no function returns true, it will return false and all the errors found.
+func EitherExaminate(validate []func() (bool, []error)) (bool, []error) {
+	errors := []error{}
+	for _, v := range validate {
+		valid, err := v()
+		if valid {
+			return true, err
+		}
+		if err != nil {
+			errors = append(errors, err...)
+		}
+	}
+
+	if len(errors) == 0 {
+		return false, nil
+	}
+
+	return false, errors
+}
