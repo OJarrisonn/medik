@@ -8,6 +8,14 @@ import (
 	"github.com/OJarrisonn/medik/pkg/parse"
 )
 
+type UnknownExamError struct {
+	ExamType string
+}
+
+func (e *UnknownExamError) Error() string {
+	return fmt.Sprintf("unknown exam: %v", e.ExamType)
+}
+
 func Run(config *config.Medik, protocols []string) (bool, []error) {
 	vitalsSuccess, vitalsErrors := runVitals(config.Vitals)
 	checksSuccess, checksErrors := runChecks(config.Checks)
@@ -38,7 +46,7 @@ func runVitals(vitals []config.Exam) (bool, []error) {
 
 	for _, v := range vitals {
 		if parse, ok := parse.GetExamParser(v.Type); !ok {
-			errors = append(errors, fmt.Errorf("no parser found for type: %v", v.Type))
+			errors = append(errors, &UnknownExamError{ExamType: v.Type})
 			success = false
 			continue
 		} else {
@@ -69,7 +77,7 @@ func runChecks(checks []config.Exam) (bool, []error) {
 
 	for _, c := range checks {
 		if parse, ok := parse.GetExamParser(c.Type); !ok {
-			errors = append(errors, fmt.Errorf("no parser found for type: %v", c.Type))
+			errors = append(errors, &UnknownExamError{ExamType: c.Type})
 			success = false
 			continue
 		} else {
