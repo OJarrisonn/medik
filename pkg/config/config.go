@@ -14,7 +14,7 @@ type Protocol struct {
 }
 
 type Exam struct {
-	Type     string      `yaml:"type"`
+	Type     string      `yaml:"exam"`
 	Vars     []string    `yaml:"vars,omitempty"`
 	Options  []string    `yaml:"options,omitempty"`
 	Regex    string      `yaml:"regex,omitempty"`
