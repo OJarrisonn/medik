@@ -3,13 +3,12 @@ package config
 import "gopkg.in/yaml.v3"
 
 type Medik struct {
-	Vitals    []Exam     `yaml:"vitals,omitempty"`
-	Checks    []Exam     `yaml:"checks,omitempty"`
-	Protocols []Protocol `yaml:"protocols,omitempty"`
+	Vitals    []Exam              `yaml:"vitals,omitempty"`
+	Checks    []Exam              `yaml:"checks,omitempty"`
+	Protocols map[string]Protocol `yaml:"protocols,omitempty"`
 }
 
 type Protocol struct {
-	Name   string `yaml:"name"`
 	Vitals []Exam `yaml:"vitals,omitempty"`
 	Checks []Exam `yaml:"checks,omitempty"`
 }
