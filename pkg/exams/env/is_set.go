@@ -1,8 +1,6 @@
 package env
 
 import (
-	"os"
-
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
 )
@@ -32,19 +30,7 @@ func (r *IsSet) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *IsSet) Examinate() (bool, []error) {
-	errors := make([]error, len(r.Vars))
-	hasError := false
-
-	for i, v := range r.Vars {
-		if _, ok := os.LookupEnv(v); !ok {
-			hasError = true
-			errors[i] = &UnsetEnvVarError{Var: v}
-		}
-	}
-
-	if hasError {
-		return false, errors
-	}
-
-	return true, nil
+	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+		return true, nil
+	})
 }

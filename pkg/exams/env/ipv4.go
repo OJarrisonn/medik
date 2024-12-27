@@ -1,7 +1,6 @@
 package env
 
 import (
-	"os"
 	"regexp"
 
 	"github.com/OJarrisonn/medik/pkg/config"
@@ -33,25 +32,13 @@ func (r *Ipv4) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *Ipv4) Examinate() (bool, []error) {
-	errors := make([]error, len(r.Vars))
-	hasError := false
+	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+			regexp := regexp.MustCompile(`^(\d{1,3}\.){3}\d{1,3}$`)
 
-	regexp := regexp.MustCompile(`^(\d{1,3}\.){3}\d{1,3}$`)
+			if !regexp.MatchString(value) {
+				return false, &InvalidEnvVarError{Var: name, Value: value, Message: "value should be a valid IPv4 address"}
+			}
 
-	for i, v := range r.Vars {
-		val, ok := os.LookupEnv(v)
-		if !ok {
-			hasError = true
-			errors[i] = &UnsetEnvVarError{Var: v}
-		} else if !regexp.MatchString(val) {
-			hasError = true
-			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: "value should be a valid IPv4 address"}
-		}
-	}
-
-	if hasError {
-		return false, errors
-	}
-
-	return true, nil
+			return true, nil
+		})
 }

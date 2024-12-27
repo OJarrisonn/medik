@@ -1,6 +1,8 @@
 package env
 
 import (
+	"os"
+
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
 )
@@ -57,4 +59,27 @@ type InvalidEnvVarError struct {
 
 func (e *InvalidEnvVarError) Error() string {
 	return "environment variable " + e.Var + " is set to '" + e.Value + "' which is invalid: " + e.Message
+}
+
+// Default implementation for Examinate method of exams.Exam. It checks for the existence of the environment
+// variables in `vars`. For those who exist, it validates the value using the `validate` function which should
+// return a boolean (valid or not) and an error if not valid. Those who are not set are considered invalid and
+// append an UnsetEnvVarError to the errors slice. If no errors are found, it returns true and nil.
+func DefaultExaminate(vars []string, validate func(name, value string) (bool, error)) (bool, []error) {
+	errors := []error{}
+
+	for _, name := range vars {
+		value, ok := os.LookupEnv(name)
+		if !ok {
+			errors = append(errors, &UnsetEnvVarError{Var: name})
+		} else if ok, err := validate(name, value); !ok {
+			errors = append(errors, err)
+		}
+	}
+
+	if len(errors) > 0 {
+		return false, errors
+	}
+
+	return true, nil
 }

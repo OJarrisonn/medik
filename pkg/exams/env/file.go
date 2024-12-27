@@ -32,25 +32,15 @@ func (r *File) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *File) Examinate() (bool, []error) {
-	errors := make([]error, len(r.Vars))
-	hasError := false
+	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+		_, err := os.Stat(value)
 
-	for i, v := range r.Vars {
-		val, ok := os.LookupEnv(v)
-		if !ok {
-			hasError = true
-			errors[i] = &UnsetEnvVarError{Var: v}
-		} else if _, err := os.Stat(val); err != nil {
-			hasError = true
-			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: r.ErrorMessage(err)}
+		if err != nil {
+			return false, &InvalidEnvVarError{Var: name, Value: value, Message: r.ErrorMessage(err)}
 		}
-	}
 
-	if hasError {
-		return false, errors
-	}
-
-	return true, nil
+		return true, nil
+	})
 }
 
 func (r *File) ErrorMessage(err error) string {

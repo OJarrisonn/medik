@@ -2,7 +2,6 @@ package env
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
@@ -45,24 +44,13 @@ func (r *Option) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *Option) Examinate() (bool, []error) {
-	errors := make([]error, len(r.Vars))
-	hasError := false
-
-	for i, v := range r.Vars {
-		if val, ok := os.LookupEnv(v); !ok {
-			hasError = true
-			errors[i] = &UnsetEnvVarError{Var: v}
-		} else if _, ok := r.Options[val]; !ok {
-			hasError = true
-			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: r.ErrorMessage()}
+	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+		if _, ok := r.Options[value]; !ok {
+			return false, &InvalidEnvVarError{Var: name, Value: value, Message: r.ErrorMessage()}
 		}
-	}
 
-	if hasError {
-		return false, errors
-	}
-
-	return true, nil
+		return true, nil
+	})
 }
 
 func (r *Option) ErrorMessage() string {

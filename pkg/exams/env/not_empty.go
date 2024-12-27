@@ -1,7 +1,6 @@
 package env
 
 import (
-	"os"
 	"strings"
 
 	"github.com/OJarrisonn/medik/pkg/config"
@@ -34,22 +33,11 @@ func (r *NotEmpty) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *NotEmpty) Examinate() (bool, []error) {
-	errors := make([]error, len(r.Vars))
-	hasError := false
-
-	for i, v := range r.Vars {
-		if val, ok := os.LookupEnv(v); !ok {
-			hasError = true
-			errors[i] = &UnsetEnvVarError{Var: v}
-		} else if strings.TrimSpace(val) == "" {
-			hasError = true
-			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: "value must contain at least one non-whitespace character"}
+	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+		if strings.TrimSpace(value) == "" {
+			return false, &InvalidEnvVarError{Var: name, Value: value, Message: "value must contain at least one non-whitespace character"}
 		}
-	}
 
-	if hasError {
-		return false, errors
-	}
-
-	return true, nil
+		return true, nil
+	})
 }

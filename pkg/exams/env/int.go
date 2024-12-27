@@ -1,7 +1,6 @@
 package env
 
 import (
-	"os"
 	"strconv"
 
 	"github.com/OJarrisonn/medik/pkg/config"
@@ -34,24 +33,15 @@ func (r *Int) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *Int) Examinate() (bool, []error) {
-	errors := make([]error, len(r.Vars))
-	hasError := false
+	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+		_, err := strconv.Atoi(value)
 
-	for i, v := range r.Vars {
-		if val, ok := os.LookupEnv(v); !ok {
-			hasError = true
-			errors[i] = &UnsetEnvVarError{Var: v}
-		} else if _, err := strconv.Atoi(val); err != nil {
-			hasError = true
-			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: r.ErrorMessage(err)}
+		if err != nil {
+			return false, &InvalidEnvVarError{Var: name, Value: value, Message: r.ErrorMessage(err)}
 		}
-	}
 
-	if hasError {
-		return false, errors
-	}
-
-	return true, nil
+		return true, nil
+	})
 }
 
 func (r *Int) ErrorMessage(err error) string {

@@ -1,7 +1,6 @@
 package env
 
 import (
-	"os"
 	"regexp"
 
 	"github.com/OJarrisonn/medik/pkg/config"
@@ -33,25 +32,13 @@ func (r *Ipv6) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *Ipv6) Examinate() (bool, []error) {
-	errors := make([]error, len(r.Vars))
-	hasError := false
-
+	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
 	regexp := regexp.MustCompile(`^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$`)
 
-	for i, v := range r.Vars {
-		val, ok := os.LookupEnv(v)
-		if !ok {
-			hasError = true
-			errors[i] = &UnsetEnvVarError{Var: v}
-		} else if !regexp.MatchString(val) {
-			hasError = true
-			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: "value should be a valid IPv6 address"}
-		}
-	}
+			if !regexp.MatchString(value) {
+				return false, &InvalidEnvVarError{Var: name, Value: value, Message: "value should be a valid IPv4 address"}
+			}
 
-	if hasError {
-		return false, errors
-	}
-
-	return true, nil
+			return true, nil
+		})
 }

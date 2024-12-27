@@ -3,7 +3,6 @@ package env
 import (
 	"fmt"
 	neturl "net/url"
-	"os"
 
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
@@ -36,25 +35,15 @@ func (r *Hostname) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *Hostname) Examinate() (bool, []error) {
-	errors := make([]error, len(r.Vars))
-	hasError := false
+	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+		ok, _ := r.validateUrl(value)
 
-	for i, v := range r.Vars {
-		val, ok := os.LookupEnv(v)
 		if !ok {
-			hasError = true
-			errors[i] = &UnsetEnvVarError{Var: v}
-		} else if ok, _ := r.validateUrl(val); !ok {
-			hasError = true
-			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: "value should be a valid URL"}
+			return false, &InvalidEnvVarError{Var: name, Value: value, Message: "value should be a valid URL"}
 		}
-	}
 
-	if hasError {
-		return false, errors
-	}
-
-	return true, nil
+		return true, nil
+	})
 }
 
 func (r *Hostname) validateUrl(rawUrl string) (bool, error) {

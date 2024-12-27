@@ -32,25 +32,14 @@ func (r *Dir) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *Dir) Examinate() (bool, []error) {
-	errors := make([]error, len(r.Vars))
-	hasError := false
-
-	for i, v := range r.Vars {
-		val, ok := os.LookupEnv(v)
-		if !ok {
-			hasError = true
-			errors[i] = &UnsetEnvVarError{Var: v}
-		} else if stat, err := os.Stat(val); err != nil || !stat.IsDir() {
-			hasError = true
-			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: r.ErrorMessage(err)}
+	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+		stat, err := os.Stat(value)
+		if err != nil || !stat.IsDir() {
+			return false, &InvalidEnvVarError{Var: name, Value: value, Message: r.ErrorMessage(err)}
 		}
-	}
 
-	if hasError {
-		return false, errors
-	}
-
-	return true, nil
+		return true, nil
+	})
 }
 
 func (r *Dir) ErrorMessage(err error) string {

@@ -2,7 +2,6 @@ package env
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 
 	"github.com/OJarrisonn/medik/pkg/config"
@@ -47,24 +46,13 @@ func (r *Regex) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *Regex) Examinate() (bool, []error) {
-	errors := make([]error, len(r.Vars))
-	hasError := false
-
-	for i, v := range r.Vars {
-		if val, ok := os.LookupEnv(v); !ok {
-			hasError = true
-			errors[i] = &UnsetEnvVarError{Var: v}
-		} else if !r.Regex.MatchString(val) {
-			hasError = true
-			errors[i] = &InvalidEnvVarError{Var: v, Value: val, Message: r.ErrorMessage()}
+	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+		if !r.Regex.MatchString(value) {
+			return false, &InvalidEnvVarError{Var: name, Value: value, Message: r.ErrorMessage()}
 		}
-	}
 
-	if hasError {
-		return false, errors
-	}
-
-	return true, nil
+		return true, nil
+	})
 }
 
 func (r *Regex) ErrorMessage() string {
