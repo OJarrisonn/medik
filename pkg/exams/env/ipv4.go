@@ -31,14 +31,14 @@ func (r *Ipv4) Parse(config config.Exam) (exams.Exam, error) {
 	return &Ipv4{config.Vars}, nil
 }
 
-func (r *Ipv4) Examinate() (bool, []error) {
-	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+func (r *Ipv4) Examinate() exams.Report {
+	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
 		regexp := regexp.MustCompile(`^(\d{1,3}\.){3}\d{1,3}$`)
 
 		if !regexp.MatchString(value) {
-			return false, &InvalidEnvVarError{Var: name, Value: value, Message: "value should be a valid IPv4 address"}
+			return invalidEnvVarStatus(name, value, "value should be a valid IPv4 address")
 		}
 
-		return true, nil
+		return validEnvVarStatus(name)
 	})
 }

@@ -45,13 +45,13 @@ func (r *Regex) Parse(config config.Exam) (exams.Exam, error) {
 	return &Regex{config.Vars, regexp}, nil
 }
 
-func (r *Regex) Examinate() (bool, []error) {
-	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+func (r *Regex) Examinate() exams.Report {
+	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
 		if !r.Regex.MatchString(value) {
-			return false, &InvalidEnvVarError{Var: name, Value: value, Message: r.ErrorMessage()}
+			return invalidEnvVarStatus(name, value, r.ErrorMessage())
 		}
 
-		return true, nil
+		return validEnvVarStatus(name)
 	})
 }
 

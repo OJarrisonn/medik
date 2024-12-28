@@ -33,15 +33,15 @@ func (r *Dir) Parse(config config.Exam) (exams.Exam, error) {
 	return &Dir{config.Vars, config.Exists}, nil
 }
 
-func (r *Dir) Examinate() (bool, []error) {
-	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+func (r *Dir) Examinate() exams.Report {
+	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
 		stat, err := os.Stat(value)
 
 		if exists := err == nil && stat.IsDir(); exists != r.Exists {
-			return false, &InvalidEnvVarError{Var: name, Value: value, Message: r.ErrorMessage(err)}
+			return invalidEnvVarStatus(name, value, r.ErrorMessage(err))
 		}
 
-		return true, nil
+		return validEnvVarStatus(name)
 	})
 }
 

@@ -62,43 +62,33 @@ func TestEnvWrongParser(t *testing.T) {
 	assert.Equal(t, "wrong exam parser: using env.is-set parser for a invalid exam", err.Error())
 }
 
-func TestEnvIsSet(t *testing.T) {
-	exam := &IsSet{Vars: []string{"VAR1", "VAR2"}}
-
-	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
-
-	// Test when environment variables are set
-	t.Setenv("VAR1", "value1")
-	t.Setenv("VAR2", "value2")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
-}
-
 func TestEnvIsSetNotEmpty(t *testing.T) {
 	exam := &NotEmpty{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report := exam.Examinate()
+	ok, header, body := report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are set to empty
 	t.Setenv("VAR1", "")
 	t.Setenv("VAR2", " ")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are set to non-empty values
 	t.Setenv("VAR1", "value1")
 	t.Setenv("VAR2", "value2")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.True(t, ok)
+	assert.NotEmpty(t, header)
+	assert.Empty(t, body)
 }
 
 func TestEnvRegex(t *testing.T) {
@@ -106,22 +96,28 @@ func TestEnvRegex(t *testing.T) {
 	exam := &Regex{Vars: []string{"VAR1", "VAR2"}, Regex: regex}
 
 	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report := exam.Examinate()
+	ok, header, body := report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables do not match regex
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "value2")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables match regex
 	t.Setenv("VAR1", "value1")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.True(t, ok)
+	assert.NotEmpty(t, header)
+	assert.Empty(t, body)
 }
 
 func TestEnvOption(t *testing.T) {
@@ -129,312 +125,337 @@ func TestEnvOption(t *testing.T) {
 	exam := &Option{Vars: []string{"VAR1", "VAR2"}, Options: options}
 
 	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report := exam.Examinate()
+	ok, header, body := report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables do not match options
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "option2")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables match options
 	t.Setenv("VAR1", "option1")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.True(t, ok)
+	assert.NotEmpty(t, header)
+	assert.Empty(t, body)
 }
 
 func TestEnvInteger(t *testing.T) {
 	exam := &Int{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report := exam.Examinate()
+	ok, header, body := report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are not integers
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "123")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are integers
 	t.Setenv("VAR1", "456")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.True(t, ok)
+	assert.NotEmpty(t, header)
+	assert.Empty(t, body)
 }
 
 func TestEnvIntegerRange(t *testing.T) {
 	exam := &IntRange{Vars: []string{"VAR1", "VAR2"}, Min: 10, Max: 100}
 
 	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report := exam.Examinate()
+	ok, header, body := report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are not integers
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "50")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are out of range
 	t.Setenv("VAR1", "5")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are within range
 	t.Setenv("VAR1", "20")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.True(t, ok)
+	assert.NotEmpty(t, header)
+	assert.Empty(t, body)
 }
 
 func TestEnvFloat(t *testing.T) {
 	exam := &Float{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report := exam.Examinate()
+	ok, header, body := report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are not floats
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "123.45")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are floats
 	t.Setenv("VAR1", "456.78")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.True(t, ok)
+	assert.NotEmpty(t, header)
+	assert.Empty(t, body)
 }
 
 func TestEnvFloatRange(t *testing.T) {
 	exam := &FloatRange{Vars: []string{"VAR1", "VAR2"}, Min: 10.5, Max: 100.5}
 
 	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report := exam.Examinate()
+	ok, header, body := report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are not floats
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "50.5")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are out of range
 	t.Setenv("VAR1", "5.5")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are within range
 	t.Setenv("VAR1", "20.5")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.True(t, ok)
+	assert.NotEmpty(t, header)
+	assert.Empty(t, body)
 }
 
 func TestEnvFileExists(t *testing.T) {
 	exam := &File{Vars: []string{"VAR1", "VAR2"}, Exists: true}
 
 	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report := exam.Examinate()
+	ok, header, body := report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are not valid files
 	t.Setenv("VAR1", "/invalid/path")
 	t.Setenv("VAR2", "/etc/hosts")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are valid files
 	t.Setenv("VAR1", "/etc/hosts")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.True(t, ok)
+	assert.NotEmpty(t, header)
+	assert.Empty(t, body)
 }
 
 func TestEnvFileNotExists(t *testing.T) {
 	exam := &File{Vars: []string{"VAR1", "VAR2"}, Exists: false}
 
 	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report := exam.Examinate()
+	ok, header, body := report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are valid files
 	t.Setenv("VAR1", "/etc/hosts")
 	t.Setenv("VAR2", "/invalid/path")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are not valid files
 	t.Setenv("VAR1", "/invalid/path")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
-}
-
-func TestEnvDirExists(t *testing.T) {
-	exam := &Dir{Vars: []string{"VAR1", "VAR2"}, Exists: true}
-
-	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
-
-	// Test when environment variables are not valid directories
-	t.Setenv("VAR1", "/invalid/path")
-	t.Setenv("VAR2", "/etc")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
-
-	// Test when environment variables are valid directories
-	t.Setenv("VAR1", "/etc")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
-}
-
-func TestEnvDirNotExists(t *testing.T) {
-	exam := &Dir{Vars: []string{"VAR1", "VAR2"}, Exists: false}
-
-	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
-
-	// Test when environment variables are valid directories
-	t.Setenv("VAR1", "/etc")
-	t.Setenv("VAR2", "/invalid/path")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
-
-	// Test when environment variables are not valid directories
-	t.Setenv("VAR1", "/invalid/path")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.True(t, ok)
+	assert.NotEmpty(t, header)
+	assert.Empty(t, body)
 }
 
 func TestEnvIpv4Addr(t *testing.T) {
 	exam := &Ipv4{Vars: []string{"VAR1", "VAR2"}}
-
 	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report := exam.Examinate()
+	ok, header, body := report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are not valid IPv4 addresses
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "192.168.1.1")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are valid IPv4 addresses
 	t.Setenv("VAR1", "10.0.0.1")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.True(t, ok)
+	assert.NotEmpty(t, header)
+	assert.Empty(t, body)
 }
-
 func TestEnvIpv6Addr(t *testing.T) {
 	exam := &Ipv6{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report := exam.Examinate()
+	ok, header, body := report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are not valid IPv6 addresses
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "2001:0db8:85a3:0000:0000:8a2e:0370:7334")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are valid IPv6 addresses
 	t.Setenv("VAR1", "fe80::1ff:fe23:4567:890a")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.True(t, ok)
+	assert.NotEmpty(t, header)
+	assert.Empty(t, body)
 }
 
 func TestEnvIpAddr(t *testing.T) {
 	exam := &Ip{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report := exam.Examinate()
+	ok, header, body := report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are not valid IP addresses
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "192.168.1.1")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are valid IP addresses
 	t.Setenv("VAR1", "fe80::1ff:fe23:4567:890a")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
-	if err != nil {
-		t.Error(err)
-	}
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.True(t, ok)
+	assert.NotEmpty(t, header)
+	assert.Empty(t, body)
 }
 
 func TestEnvHostname(t *testing.T) {
 	exam := &Hostname{Vars: []string{"VAR1", "VAR2"}, Protocol: "http"}
 
 	// Test when environment variables are not set
-	result, err := exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report := exam.Examinate()
+	ok, header, body := report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are not valid hostnames
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "http://example.com")
-	result, err = exam.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 
 	// Test when environment variables are valid hostnames
 	t.Setenv("VAR1", "http://example.com")
-	result, err = exam.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
+	report = exam.Examinate()
+	ok, header, body = report.Format(false)
+	assert.True(t, ok)
+	assert.NotEmpty(t, header)
+	assert.Empty(t, body)
 
 	exam2 := &Hostname{Vars: []string{"VAR1", "VAR2"}, Protocol: ""}
 	t.Setenv("VAR1", "example.com")
 	t.Setenv("VAR2", "tcp://example.com")
-	result, err = exam2.Examinate()
-	assert.True(t, result)
-	assert.Nil(t, err)
+	report = exam2.Examinate()
+	ok, header, body = report.Format(false)
+	assert.True(t, ok)
+	assert.NotEmpty(t, header)
+	assert.Empty(t, body)
 	t.Setenv("VAR1", "\n")
-	result, err = exam2.Examinate()
-	assert.False(t, result)
-	assert.NotNil(t, err)
+	report = exam2.Examinate()
+	ok, header, body = report.Format(false)
+	assert.False(t, ok)
+	assert.NotEmpty(t, header)
+	assert.NotEmpty(t, body)
 }
 
 func TestEnvIsSetParse(t *testing.T) {

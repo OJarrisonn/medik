@@ -32,15 +32,15 @@ func (r *Int) Parse(config config.Exam) (exams.Exam, error) {
 	return &Int{config.Vars}, nil
 }
 
-func (r *Int) Examinate() (bool, []error) {
-	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+func (r *Int) Examinate() exams.Report {
+	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
 		_, err := strconv.Atoi(value)
 
 		if err != nil {
-			return false, &InvalidEnvVarError{Var: name, Value: value, Message: r.ErrorMessage(err)}
+			return invalidEnvVarStatus(name, value, r.ErrorMessage(err))
 		}
 
-		return true, nil
+		return validEnvVarStatus(name)
 	})
 }
 

@@ -34,15 +34,15 @@ func (r *Hostname) Parse(config config.Exam) (exams.Exam, error) {
 	return &Hostname{config.Vars, config.Protocol}, nil
 }
 
-func (r *Hostname) Examinate() (bool, []error) {
-	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+func (r *Hostname) Examinate() exams.Report {
+	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
 		ok, _ := r.validateUrl(value)
 
 		if !ok {
-			return false, &InvalidEnvVarError{Var: name, Value: value, Message: "value should be a valid URL"}
+			return invalidEnvVarStatus(name, value, "value should be a valid URL")
 		}
 
-		return true, nil
+		return validEnvVarStatus(name)
 	})
 }
 

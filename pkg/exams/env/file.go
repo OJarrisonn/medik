@@ -33,15 +33,15 @@ func (r *File) Parse(config config.Exam) (exams.Exam, error) {
 	return &File{config.Vars, config.Exists}, nil
 }
 
-func (r *File) Examinate() (bool, []error) {
-	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+func (r *File) Examinate() exams.Report {
+	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
 		_, err := os.Stat(value)
 
 		if (err == nil) != r.Exists {
-			return false, &InvalidEnvVarError{Var: name, Value: value, Message: r.ErrorMessage(err)}
+			return invalidEnvVarStatus(name, value, r.ErrorMessage(err))
 		}
 
-		return true, nil
+		return validEnvVarStatus(name)
 	})
 }
 

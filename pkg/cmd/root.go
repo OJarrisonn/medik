@@ -22,11 +22,13 @@ var rootCmd = &cobra.Command{
 var ConfigFile string
 var EnvFile string
 var NoUseEnv bool
+var Verbose bool
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&ConfigFile, "config", "c", medik.DefaultConfigFile, "Config file to use")
 	rootCmd.PersistentFlags().StringVarP(&EnvFile, "env", "e", medik.DefaultEnvFile, "Env file to use")
 	rootCmd.PersistentFlags().BoolVar(&NoUseEnv, "no-env", medik.DefaultNoUseEnv, "Won't use an env file")
+	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", medik.DefaultVerbose, "Verbose output")
 }
 
 // Execute runs the root command.
@@ -57,10 +59,20 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	success, errs := runner.Run(cfg, args)
+	success, reports := runner.Run(cfg, args)
 
-	for _, e := range errs {
-		fmt.Println(e)
+	for _, e := range reports {
+		ok, header, body := e.Format(Verbose)
+
+		if ok && !Verbose {
+			continue
+		}
+
+		fmt.Println(header)
+
+		if body != "" {
+			fmt.Println(body)
+		}
 	}
 
 	if success {
@@ -82,7 +94,7 @@ func loadConfig() (*config.Medik, error) {
 }
 
 func loadEnv() (bool, error) {
-	if !NoUseEnv {
+	if NoUseEnv {
 		return true, nil
 	}
 

@@ -1,6 +1,7 @@
 package env
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/OJarrisonn/medik/pkg/config"
@@ -35,6 +36,39 @@ var parsers = map[string]func(config config.Exam) (exams.Exam, error){
 	exams.ExamType[*Hostname]():   exams.ExamParse[*Hostname](),
 }
 
+type EnvReport struct {
+	Type     string
+	Success  bool
+	Statuses []EnvStatus
+}
+
+type EnvStatus struct {
+	Success bool
+	Var     string
+	Message string
+}
+
+func (r *EnvReport) Succeed() bool {
+	return r.Success
+}
+
+func (r *EnvReport) Format(verbose bool) (bool, string, string) {
+	statuses := ""
+
+	for _, status := range r.Statuses {
+		if !status.Success || verbose {
+			statuses += fmt.Sprintf("\t%v: %v\n", status.Var, status.Message)
+		}
+	}
+
+	success := "succeeds"
+	if !r.Success {
+		success = "fails"
+	}
+
+	return r.Success, fmt.Sprintf("Exam: %v %v", r.Type, success), statuses
+}
+
 type VarsUnsetError struct {
 	Exam string
 }
@@ -43,43 +77,55 @@ func (e *VarsUnsetError) Error() string {
 	return "`vars` field is not set for exam " + e.Exam
 }
 
-type UnsetEnvVarError struct {
-	Var string
+func validEnvVarStatus(name string) EnvStatus {
+	return EnvStatus{
+		Success: true,
+		Var:     name,
+		Message: "is valid",
+	}
 }
 
-func (e *UnsetEnvVarError) Error() string {
-	return "environment variable " + e.Var + " is not set"
+// Function to create a status for an environment variable that is not set
+func unsetEnvVarStatus(name string) EnvStatus {
+	return EnvStatus{
+		Success: false,
+		Var:     name,
+		Message: "is not set",
+	}
 }
 
-type InvalidEnvVarError struct {
-	Var     string
-	Value   string
-	Message string
-}
-
-func (e *InvalidEnvVarError) Error() string {
-	return "environment variable " + e.Var + " is set to '" + e.Value + "' which is invalid: " + e.Message
+// Function to create a status for an environment variable whose value is invalid
+func invalidEnvVarStatus(name, value, message string) EnvStatus {
+	return EnvStatus{
+		Success: false,
+		Var:     name,
+		Message: fmt.Sprintf("%v is not valid %v", value, message),
+	}
 }
 
 // Default implementation for Examinate method of exams.Exam. It checks for the existence of the environment
 // variables in `vars`. For those who exist, it validates the value using the `validate` function which should
 // return a boolean (valid or not) and an error if not valid. Those who are not set are considered invalid and
 // append an UnsetEnvVarError to the errors slice. If no errors are found, it returns true and nil.
-func DefaultExaminate(vars []string, validate func(name, value string) (bool, error)) (bool, []error) {
-	errors := []error{}
+func DefaultExaminate(vars []string, validate func(name, value string) EnvStatus) *EnvReport {
+	statuses := []EnvStatus{}
+	success := true
 
 	for _, name := range vars {
 		value, ok := os.LookupEnv(name)
 		if !ok {
-			errors = append(errors, &UnsetEnvVarError{Var: name})
-		} else if ok, err := validate(name, value); !ok {
-			errors = append(errors, err)
+			success = false
+			statuses = append(statuses, unsetEnvVarStatus(name))
+		} else {
+			status := validate(name, value)
+
+			if !status.Success {
+				success = false
+			}
+
+			statuses = append(statuses, status)
 		}
 	}
 
-	if len(errors) > 0 {
-		return false, errors
-	}
-
-	return true, nil
+	return &EnvReport{Success: success, Statuses: statuses}
 }

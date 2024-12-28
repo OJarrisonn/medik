@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/OJarrisonn/medik/pkg/config"
+	"github.com/OJarrisonn/medik/pkg/exams"
 	"github.com/OJarrisonn/medik/pkg/parse"
 )
 
@@ -16,9 +17,21 @@ func (e *UnknownExamError) Error() string {
 	return fmt.Sprintf("unknown exam: %v", e.ExamType)
 }
 
-func Run(config *config.Medik, protocols []string) (bool, []error) {
-	vitalsSuccess, vitalsErrors := runVitals(config.Vitals)
-	checksSuccess, checksErrors := runChecks(config.Checks)
+func Run(config *config.Medik, protocols []string) (bool, []exams.Report) {
+	vitalsSuccess, vitalsReports, vitalsError := runVitals(config.Vitals)
+
+	if vitalsError != nil {
+		fmt.Println(vitalsError)
+		return false, nil
+	}
+
+	_, checksReports, checksError := runChecks(config.Checks)
+
+	if checksError != nil {
+		fmt.Println(checksError)
+		return false, nil
+	}
+
 	protocolsUsed := config.Protocols
 
 	for k := range protocolsUsed {
@@ -27,101 +40,93 @@ func Run(config *config.Medik, protocols []string) (bool, []error) {
 		}
 	}
 
-	protocolsSuccess, protocolsErrors := runProtocols(protocolsUsed)
+	protocolsSuccess, protocolsReports, protocolsError := runProtocols(protocolsUsed)
 
-	success := vitalsSuccess && checksSuccess && protocolsSuccess
-	errors := append(vitalsErrors, checksErrors...)
-	errors = append(errors, protocolsErrors...)
-
-	if len(errors) == 0 {
-		return success, nil
+	if protocolsError != nil {
+		fmt.Println(protocolsError)
+		return false, nil
 	}
 
-	return success, errors
+	success := vitalsSuccess && protocolsSuccess
+
+	return success, append(append(vitalsReports, checksReports...), protocolsReports...)
 }
 
-func runVitals(vitals []config.Exam) (bool, []error) {
-	errors := []error{}
+func runVitals(vitals []config.Exam) (bool, []exams.Report, error) {
 	success := true
+	reports := []exams.Report{}
 
 	for _, v := range vitals {
 		if parse, ok := parse.GetExamParser(v.Type); !ok {
-			errors = append(errors, &UnknownExamError{ExamType: v.Type})
-			success = false
-			continue
+			return false, nil, &UnknownExamError{ExamType: v.Type}
 		} else {
 			exam, err := parse(v)
 			if err != nil {
-				errors = append(errors, err)
-				success = false
-				continue
+				return false, nil, err
 			}
 
-			if ok, errs := exam.Examinate(); !ok {
-				errors = append(errors, errs...)
+			report := exam.Examinate()
+			if !report.Succeed() {
 				success = false
 			}
+
+			reports = append(reports, report)
 		}
 	}
 
-	if len(errors) == 0 {
-		return true, nil
-	}
-
-	return success, errors
+	return success, reports, nil
 }
 
-func runChecks(checks []config.Exam) (bool, []error) {
-	errors := []error{}
+func runChecks(checks []config.Exam) (bool, []exams.Report, error) {
 	success := true
+	reports := []exams.Report{}
 
 	for _, c := range checks {
 		if parse, ok := parse.GetExamParser(c.Type); !ok {
-			errors = append(errors, &UnknownExamError{ExamType: c.Type})
-			success = false
-			continue
+			return false, nil, &UnknownExamError{ExamType: c.Type}
 		} else {
 			exam, err := parse(c)
 			if err != nil {
-				errors = append(errors, err)
-				continue
+				return false, nil, err
 			}
 
-			if ok, errs := exam.Examinate(); !ok {
-				errors = append(errors, errs...)
+			report := exam.Examinate()
+			if !report.Succeed() {
+				success = false
 			}
+
+			reports = append(reports, report)
 		}
 	}
 
-	if len(errors) == 0 {
-		return true, nil
-	}
-
-	return success, errors
+	return success, reports, nil
 }
 
-func runProtocols(protocols map[string]config.Protocol) (bool, []error) {
-	errors := []error{}
+func runProtocols(protocols map[string]config.Protocol) (bool, []exams.Report, error) {
+	reports := []exams.Report{}
 	success := true
 
 	for _, p := range protocols {
-		vitalsSuccess, vitalsErrors := runVitals(p.Vitals)
-		checksSuccess, checksErrors := runChecks(p.Checks)
+		vitalsSuccess, vitalsReports, vitalsError := runVitals(p.Vitals)
+
+		if vitalsError != nil {
+			return false, nil, vitalsError
+		}
+
+		reports = append(reports, vitalsReports...)
 
 		if !vitalsSuccess {
-			errors = append(errors, vitalsErrors...)
 			success = false
 		}
 
-		if !checksSuccess {
-			errors = append(errors, checksErrors...)
-			success = false
+		_, checksReports, checksError := runChecks(p.Checks)
+
+		if checksError != nil {
+			return false, nil, checksError
 		}
+
+		reports = append(reports, checksReports...)
 	}
 
-	if len(errors) == 0 {
-		return true, nil
-	}
-
-	return success, errors
+	return success, reports, nil
 }

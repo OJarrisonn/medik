@@ -20,7 +20,7 @@ type Exam interface {
 	// Examinate checks if a rule is being enforced
 	// Returns true if the rule is being enforced, false otherwise
 	// Returns an error if any underlying operation fails or the rule is not being enforced
-	Examinate() (bool, []error)
+	Examinate() Report
 }
 
 // Returns the Parse method from an Exam
@@ -34,6 +34,16 @@ func ExamParse[E Exam]() func(config config.Exam) (Exam, error) {
 func ExamType[E Exam]() string {
 	var e E
 	return e.Type()
+}
+
+type Report interface {
+	// Succeed returns true if the report is successful, false otherwise
+	Succeed() bool
+
+	// Format the report to a printable string
+	// Verbose indicates if non-error messages should be included
+	// Returns a boolean indicating if the report is a success, a string with the report header and a string with the report body
+	Format(verbose bool) (bool, string, string)
 }
 
 // An error to describe a strange scenario where the wrong exam parser was called
@@ -67,49 +77,4 @@ type FieldValueError struct {
 
 func (e *FieldValueError) Error() string {
 	return "invalid value '" + e.Value + "' for field `" + e.Field + "` in exam " + e.Exam + ": " + e.Message
-}
-
-// A function that combines multiple validation functions.
-// The functions are evaluated in order and short-circuited. It means that if one of the functions returns false,
-// the `CompoundExaminate` will return immediately with the errors found until that point.
-func CompoundExaminate(validate []func() (bool, []error)) (bool, []error) {
-	errors := []error{}
-	for _, v := range validate {
-		valid, err := v()
-		if err != nil {
-			errors = append(errors, err...)
-		}
-		if !valid {
-			return false, errors
-		}
-	}
-
-	if len(errors) == 0 {
-		return true, nil
-	}
-
-	return true, errors
-}
-
-// A function that combines multiple validation functions.
-// The functions are evaluated in order and short-circuited. It means that if one of the functions returns true,
-// the `CompoundExaminate` will return immediately with the errors found only in the matching validation function.
-// If no function returns true, it will return false and all the errors found.
-func EitherExaminate(validate []func() (bool, []error)) (bool, []error) {
-	errors := []error{}
-	for _, v := range validate {
-		valid, err := v()
-		if valid {
-			return true, err
-		}
-		if err != nil {
-			errors = append(errors, err...)
-		}
-	}
-
-	if len(errors) == 0 {
-		return false, nil
-	}
-
-	return false, errors
 }

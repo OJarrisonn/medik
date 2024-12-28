@@ -43,13 +43,13 @@ func (r *Option) Parse(config config.Exam) (exams.Exam, error) {
 	return &Option{config.Vars, options}, nil
 }
 
-func (r *Option) Examinate() (bool, []error) {
-	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+func (r *Option) Examinate() exams.Report {
+	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
 		if _, ok := r.Options[value]; !ok {
-			return false, &InvalidEnvVarError{Var: name, Value: value, Message: r.ErrorMessage()}
+			return invalidEnvVarStatus(name, value, r.ErrorMessage())
 		}
 
-		return true, nil
+		return validEnvVarStatus(name)
 	})
 }
 

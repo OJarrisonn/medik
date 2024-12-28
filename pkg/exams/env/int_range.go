@@ -57,22 +57,18 @@ func (r *IntRange) Parse(config config.Exam) (exams.Exam, error) {
 	return &IntRange{config.Vars, config.Min.(int), config.Max.(int)}, nil
 }
 
-func (r *IntRange) Examinate() (bool, []error) {
-	var i = &Int{Vars: r.Vars}
+func (r *IntRange) Examinate() exams.Report {
+	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
+		num, err := strconv.Atoi(value)
 
-	var withinRange = func() (bool, []error) {
-		return DefaultExaminate(r.Vars, func(name string, value string) (bool, error) {
-			num, _ := strconv.Atoi(value)
-			if num < r.Min || num > r.Max {
-				return false, fmt.Errorf("value should be in the range [%v,%v]", r.Min, r.Max)
-			}
+		if err != nil {
+			return invalidEnvVarStatus(name, value, "value should be a number. "+err.Error())
+		}
 
-			return true, nil
-		})
-	}
+		if num < r.Min || num > r.Max {
+			return invalidEnvVarStatus(name, value, fmt.Sprintf("value should be in the range [%v,%v]", r.Min, r.Max))
+		}
 
-	return exams.CompoundExaminate([]func() (bool, []error){
-		i.Examinate,
-		withinRange,
+		return validEnvVarStatus(name)
 	})
 }

@@ -31,13 +31,13 @@ func (r *Float) Parse(config config.Exam) (exams.Exam, error) {
 	return &Float{config.Vars}, nil
 }
 
-func (r *Float) Examinate() (bool, []error) {
-	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
+func (r *Float) Examinate() exams.Report {
+	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
 		_, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return false, &InvalidEnvVarError{Var: name, Value: value, Message: err.Error()}
+			return invalidEnvVarStatus(name, value, err.Error())
 		}
 
-		return true, nil
+		return validEnvVarStatus(name)
 	})
 }

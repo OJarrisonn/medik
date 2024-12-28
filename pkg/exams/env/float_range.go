@@ -57,22 +57,17 @@ func (r *FloatRange) Parse(config config.Exam) (exams.Exam, error) {
 	return &FloatRange{config.Vars, config.Min.(float64), config.Max.(float64)}, nil
 }
 
-func (r *FloatRange) Examinate() (bool, []error) {
-	var f = &Float{Vars: r.Vars}
+func (r *FloatRange) Examinate() exams.Report {
+	return DefaultExaminate(r.Vars, func(name string, value string) EnvStatus {
+		num, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return invalidEnvVarStatus(name, value, err.Error())
+		}
 
-	var withinRange = func() (bool, []error) {
-		return DefaultExaminate(r.Vars, func(name string, value string) (bool, error) {
-			num, _ := strconv.ParseFloat(value, 64)
-			if num < r.Min || num > r.Max {
-				return false, fmt.Errorf("value should be in the range [%v,%v]", r.Min, r.Max)
-			}
+		if num < r.Min || num > r.Max {
+			return invalidEnvVarStatus(name, value, fmt.Sprintf("value should be in the range [%v,%v]", r.Min, r.Max))
+		}
 
-			return true, nil
-		})
-	}
-
-	return exams.CompoundExaminate([]func() (bool, []error){
-		f.Examinate,
-		withinRange,
+		return validEnvVarStatus(name)
 	})
 }

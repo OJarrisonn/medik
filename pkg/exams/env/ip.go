@@ -1,6 +1,8 @@
 package env
 
 import (
+	"regexp"
+
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
 )
@@ -30,20 +32,16 @@ func (r *Ip) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 // TODO: Refactor this
-func (r *Ip) Examinate() (bool, []error) {
-	for _, v := range r.Vars {
-		ipv4 := &Ipv4{Vars: []string{v}}
-		ipv6 := &Ipv6{Vars: []string{v}}
+func (r *Ip) Examinate() exams.Report {
+	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
+		regexpv4 := regexp.MustCompile(`^(\d{1,3}\.){3}\d{1,3}$`)
 
-		ok, err := exams.EitherExaminate([]func() (bool, []error){
-			ipv4.Examinate,
-			ipv6.Examinate,
-		})
+		regexpv6 := regexp.MustCompile(`^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$`)
 
-		if !ok {
-			return false, err
+		if !regexpv4.MatchString(value) && !regexpv6.MatchString(value) {
+			return invalidEnvVarStatus(name, value, "value should be a valid IP address")
 		}
-	}
 
-	return true, nil
+		return validEnvVarStatus(name)
+	})
 }
