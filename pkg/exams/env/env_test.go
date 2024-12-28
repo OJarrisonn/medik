@@ -351,10 +351,13 @@ func TestEnvIpAddr(t *testing.T) {
 	assert.NotNil(t, err)
 
 	// Test when environment variables are valid IP addresses
-	t.Setenv("VAR1", "2001:0db8:85a3:0000:0000:8a2e:0370:7334")
+	t.Setenv("VAR1", "fe80::1ff:fe23:4567:890a")
 	result, err = exam.Examinate()
 	assert.True(t, result)
 	assert.Nil(t, err)
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestEnvHostname(t *testing.T) {
