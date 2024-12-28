@@ -7,4 +7,4 @@ const Author = "OJarrisonn <jhmtv10@gmail.com>"
 
 const DefaultConfigFile = "medik.yaml"
 const DefaultEnvFile = ".env"
-const DefaultUseEnv = false
+const DefaultNoUseEnv = true

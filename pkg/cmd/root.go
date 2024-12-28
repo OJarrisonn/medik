@@ -20,12 +20,12 @@ var rootCmd = &cobra.Command{
 
 var ConfigFile string
 var EnvFile string
-var UseEnv bool
+var NoUseEnv bool
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&ConfigFile, "config", "c", medik.DefaultConfigFile, "Config file to use")
 	rootCmd.PersistentFlags().StringVarP(&EnvFile, "env", "e", medik.DefaultEnvFile, "Env file to use")
-	rootCmd.PersistentFlags().BoolVar(&UseEnv, "no-env", medik.DefaultUseEnv, "Won't use an env file")
+	rootCmd.PersistentFlags().BoolVar(&NoUseEnv, "no-env", medik.DefaultNoUseEnv, "Won't use an env file")
 }
 
 func Execute() {
