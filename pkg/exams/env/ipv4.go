@@ -33,12 +33,12 @@ func (r *Ipv4) Parse(config config.Exam) (exams.Exam, error) {
 
 func (r *Ipv4) Examinate() (bool, []error) {
 	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
-			regexp := regexp.MustCompile(`^(\d{1,3}\.){3}\d{1,3}$`)
+		regexp := regexp.MustCompile(`^(\d{1,3}\.){3}\d{1,3}$`)
 
-			if !regexp.MatchString(value) {
-				return false, &InvalidEnvVarError{Var: name, Value: value, Message: "value should be a valid IPv4 address"}
-			}
+		if !regexp.MatchString(value) {
+			return false, &InvalidEnvVarError{Var: name, Value: value, Message: "value should be a valid IPv4 address"}
+		}
 
-			return true, nil
-		})
+		return true, nil
+	})
 }
