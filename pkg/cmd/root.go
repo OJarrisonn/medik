@@ -6,6 +6,7 @@ import (
 
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/medik"
+	"github.com/OJarrisonn/medik/pkg/parse"
 	"github.com/OJarrisonn/medik/pkg/runner"
 	"github.com/spf13/cobra"
 )
@@ -65,4 +66,36 @@ func loadConfig() (*config.Medik, error) {
 	}
 
 	return config.Parse(string(content))
+}
+
+func loadEnv() (bool, error) {
+	if !NoUseEnv {
+		return true, nil
+	}
+
+	content, err := os.ReadFile(EnvFile)
+
+	if err != nil {
+		return false, err
+	}
+
+	return useEnv(string(content))
+}
+
+func useEnv(content string) (bool, error) {
+	env, err := parse.ParseEnvFile(content)
+
+	if err != nil {
+		return false, err
+	}
+
+	for k, v := range env {
+		err := os.Setenv(k, v)
+
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return true, nil
 }
