@@ -291,8 +291,8 @@ func TestEnvFileNotExists(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestEnvDir(t *testing.T) {
-	exam := &Dir{Vars: []string{"VAR1", "VAR2"}}
+func TestEnvDirExists(t *testing.T) {
+	exam := &Dir{Vars: []string{"VAR1", "VAR2"}, Exists: true}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -308,6 +308,28 @@ func TestEnvDir(t *testing.T) {
 
 	// Test when environment variables are valid directories
 	t.Setenv("VAR1", "/etc")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.Nil(t, err)
+}
+
+func TestEnvDirNotExists(t *testing.T) {
+	exam := &Dir{Vars: []string{"VAR1", "VAR2"}, Exists: false}
+
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.NotNil(t, err)
+
+	// Test when environment variables are valid directories
+	t.Setenv("VAR1", "/etc")
+	t.Setenv("VAR2", "/invalid/path")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.NotNil(t, err)
+
+	// Test when environment variables are not valid directories
+	t.Setenv("VAR1", "/invalid/path")
 	result, err = exam.Examinate()
 	assert.True(t, result)
 	assert.Nil(t, err)
