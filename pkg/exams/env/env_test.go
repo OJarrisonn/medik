@@ -247,8 +247,8 @@ func TestEnvFloatRange(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestEnvFile(t *testing.T) {
-	exam := &File{Vars: []string{"VAR1", "VAR2"}}
+func TestEnvFileExists(t *testing.T) {
+	exam := &File{Vars: []string{"VAR1", "VAR2"}, Exists: true}
 
 	// Test when environment variables are not set
 	result, err := exam.Examinate()
@@ -264,6 +264,28 @@ func TestEnvFile(t *testing.T) {
 
 	// Test when environment variables are valid files
 	t.Setenv("VAR1", "/etc/hosts")
+	result, err = exam.Examinate()
+	assert.True(t, result)
+	assert.Nil(t, err)
+}
+
+func TestEnvFileNotExists(t *testing.T) {
+	exam := &File{Vars: []string{"VAR1", "VAR2"}, Exists: false}
+
+	// Test when environment variables are not set
+	result, err := exam.Examinate()
+	assert.False(t, result)
+	assert.NotNil(t, err)
+
+	// Test when environment variables are valid files
+	t.Setenv("VAR1", "/etc/hosts")
+	t.Setenv("VAR2", "/invalid/path")
+	result, err = exam.Examinate()
+	assert.False(t, result)
+	assert.NotNil(t, err)
+
+	// Test when environment variables are not valid files
+	t.Setenv("VAR1", "/invalid/path")
 	result, err = exam.Examinate()
 	assert.True(t, result)
 	assert.Nil(t, err)

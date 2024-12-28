@@ -1,6 +1,7 @@
 package env
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/OJarrisonn/medik/pkg/config"
@@ -12,7 +13,8 @@ import (
 // type: env.file,
 // vars: []string
 type File struct {
-	Vars []string
+	Vars   []string
+	Exists bool
 }
 
 func (r *File) Type() string {
@@ -28,14 +30,14 @@ func (r *File) Parse(config config.Exam) (exams.Exam, error) {
 		return nil, &VarsUnsetError{Exam: r.Type()}
 	}
 
-	return &File{config.Vars}, nil
+	return &File{config.Vars, config.Exists}, nil
 }
 
 func (r *File) Examinate() (bool, []error) {
 	return DefaultExaminate(r.Vars, func(name, value string) (bool, error) {
 		_, err := os.Stat(value)
 
-		if err != nil {
+		if (err == nil) != r.Exists {
 			return false, &InvalidEnvVarError{Var: name, Value: value, Message: r.ErrorMessage(err)}
 		}
 
@@ -44,5 +46,10 @@ func (r *File) Examinate() (bool, []error) {
 }
 
 func (r *File) ErrorMessage(err error) string {
-	return "value should point to a existing file. " + err.Error()
+	non := "an "
+	if !r.Exists {
+		non = "a non "
+	}
+
+	return fmt.Sprintf("value should point to %vexisting file. %v", non, err)
 }

@@ -21,6 +21,7 @@ type Exam struct {
 	Min      interface{} `yaml:"min,omitempty"`
 	Max      interface{} `yaml:"max,omitempty"`
 	Protocol string      `yaml:"protocol,omitempty"`
+	Exists   bool        `yaml:"exists,omitempty"`
 }
 
 // Given the contents of a Medik configuration file, parse it and return a config.Medik object
