@@ -17,19 +17,17 @@ func (e *UnknownExamError) Error() string {
 	return fmt.Sprintf("unknown exam: %v", e.ExamType)
 }
 
-func Run(config *config.Medik, protocols []string) (bool, []exams.Report) {
+func Run(config *config.Medik, protocols []string) (bool, []exams.Report, error) {
 	vitalsSuccess, vitalsReports, vitalsError := runVitals(config.Vitals)
 
 	if vitalsError != nil {
-		fmt.Println(vitalsError)
-		return false, nil
+		return false, nil, vitalsError
 	}
 
 	_, checksReports, checksError := runChecks(config.Checks)
 
 	if checksError != nil {
-		fmt.Println(checksError)
-		return false, nil
+		return false, nil, checksError
 	}
 
 	protocolsUsed := config.Protocols
@@ -43,13 +41,12 @@ func Run(config *config.Medik, protocols []string) (bool, []exams.Report) {
 	protocolsSuccess, protocolsReports, protocolsError := runProtocols(protocolsUsed)
 
 	if protocolsError != nil {
-		fmt.Println(protocolsError)
-		return false, nil
+		return false, nil, protocolsError
 	}
 
 	success := vitalsSuccess && protocolsSuccess
 
-	return success, append(append(vitalsReports, checksReports...), protocolsReports...)
+	return success, append(append(vitalsReports, checksReports...), protocolsReports...), nil
 }
 
 func runVitals(vitals []config.Exam) (bool, []exams.Report, error) {

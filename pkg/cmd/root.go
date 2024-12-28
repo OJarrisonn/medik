@@ -59,7 +59,12 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	success, reports := runner.Run(cfg, args)
+	success, reports, err := runner.Run(cfg, args)
+
+	if err != nil {
+		fmt.Printf("Error running medik: %s\n", err)
+		os.Exit(1)
+	}
 
 	for _, e := range reports {
 		ok, header, body := e.Format(Verbose)
