@@ -20,10 +20,8 @@ SUCCESS=0
 if [[ "$COVERAGE" == true ]]; then
     go test -v -cover -coverprofile=$COVERAGE_FILE -json ./ ./pkg/... | ${TPARSE}
     SUCCESS=$?
-    if [ $SUCCESS -eq 0 ]; then
-        gum log -sl info "Generating coverage report"
-        go tool cover -html=$COVERAGE_FILE -o $COVERAGE_HTML
-    fi
+    gum log -sl info "Generating coverage report"
+    go tool cover -html=$COVERAGE_FILE -o $COVERAGE_HTML
 else
     go test -v ./ ./pkg/... | ${TPARSE}
     SUCCESS=$?
