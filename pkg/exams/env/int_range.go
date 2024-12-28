@@ -58,7 +58,7 @@ func (r *IntRange) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *IntRange) Examinate() exams.Report {
-	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
 		num, err := strconv.Atoi(value)
 
 		if err != nil {

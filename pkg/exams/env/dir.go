@@ -34,7 +34,7 @@ func (r *Dir) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *Dir) Examinate() exams.Report {
-	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
 		stat, err := os.Stat(value)
 
 		if exists := err == nil && stat.IsDir(); exists != r.Exists {

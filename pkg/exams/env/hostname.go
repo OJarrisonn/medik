@@ -35,7 +35,7 @@ func (r *Hostname) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *Hostname) Examinate() exams.Report {
-	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
 		ok, _ := r.validateUrl(value)
 
 		if !ok {

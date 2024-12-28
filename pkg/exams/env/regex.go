@@ -46,7 +46,7 @@ func (r *Regex) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *Regex) Examinate() exams.Report {
-	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
 		if !r.Regex.MatchString(value) {
 			return invalidEnvVarStatus(name, value, r.ErrorMessage())
 		}

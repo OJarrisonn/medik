@@ -32,7 +32,7 @@ func (r *Ipv4) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *Ipv4) Examinate() exams.Report {
-	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
 		regexp := regexp.MustCompile(`^(\d{1,3}\.){3}\d{1,3}$`)
 
 		if !regexp.MatchString(value) {

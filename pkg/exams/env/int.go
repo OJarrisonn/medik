@@ -33,7 +33,7 @@ func (r *Int) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *Int) Examinate() exams.Report {
-	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
 		_, err := strconv.Atoi(value)
 
 		if err != nil {

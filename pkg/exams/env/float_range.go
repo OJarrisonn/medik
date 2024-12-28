@@ -58,7 +58,7 @@ func (r *FloatRange) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *FloatRange) Examinate() exams.Report {
-	return DefaultExaminate(r.Vars, func(name string, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Vars, func(name string, value string) EnvStatus {
 		num, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return invalidEnvVarStatus(name, value, err.Error())

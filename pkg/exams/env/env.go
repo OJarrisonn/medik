@@ -107,7 +107,7 @@ func invalidEnvVarStatus(name, value, message string) EnvStatus {
 // variables in `vars`. For those who exist, it validates the value using the `validate` function which should
 // return a boolean (valid or not) and an error if not valid. Those who are not set are considered invalid and
 // append an UnsetEnvVarError to the errors slice. If no errors are found, it returns true and nil.
-func DefaultExaminate(vars []string, validate func(name, value string) EnvStatus) *EnvReport {
+func DefaultExaminate(exam string, vars []string, validate func(name, value string) EnvStatus) *EnvReport {
 	statuses := []EnvStatus{}
 	success := true
 
@@ -127,5 +127,5 @@ func DefaultExaminate(vars []string, validate func(name, value string) EnvStatus
 		}
 	}
 
-	return &EnvReport{Success: success, Statuses: statuses}
+	return &EnvReport{Type: exam, Success: success, Statuses: statuses}
 }

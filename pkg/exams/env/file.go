@@ -34,7 +34,7 @@ func (r *File) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *File) Examinate() exams.Report {
-	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
 		_, err := os.Stat(value)
 
 		if (err == nil) != r.Exists {

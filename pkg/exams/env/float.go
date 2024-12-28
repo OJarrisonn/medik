@@ -32,7 +32,7 @@ func (r *Float) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *Float) Examinate() exams.Report {
-	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
 		_, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return invalidEnvVarStatus(name, value, err.Error())

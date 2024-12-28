@@ -33,7 +33,7 @@ func (r *NotEmpty) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *NotEmpty) Examinate() exams.Report {
-	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
 		if strings.TrimSpace(value) == "" {
 			return invalidEnvVarStatus(name, value, "value must contain at least one non-whitespace character")
 		}

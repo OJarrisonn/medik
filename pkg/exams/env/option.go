@@ -44,7 +44,7 @@ func (r *Option) Parse(config config.Exam) (exams.Exam, error) {
 }
 
 func (r *Option) Examinate() exams.Report {
-	return DefaultExaminate(r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
 		if _, ok := r.Options[value]; !ok {
 			return invalidEnvVarStatus(name, value, r.ErrorMessage())
 		}
