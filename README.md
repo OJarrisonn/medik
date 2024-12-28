@@ -85,7 +85,9 @@ The set of exams related to environment variables. The field `vars` is a list of
   - `min`: The minimum value (inclusive)
   - `max`: The maximum value (inclusive)
 - `env.file`: Check if an environment variable is set and points to an existing file
+  - `exists`: Indicates if the file should exist or not
 - `env.dir`: Check if an environment variable is set and points to an existing directory
+  - `exists`: Indicates if the directory should exist or not
 - `env.ipv4`: Check if an environment variable is set and is a valid IPv4 address
 - `env.ipv6`: Check if an environment variable is set and is a valid IPv6 address
 - `env.ip`: Check if an environment variable is set and is a valid IP address (IPv4 or IPv6)
