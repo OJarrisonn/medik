@@ -18,12 +18,12 @@ gum log -sl info "Running tests for medik"
 SUCCESS=0
 
 if [[ "$COVERAGE" == true ]]; then
-    go test -v -cover -coverprofile=$COVERAGE_FILE -json ./ ./pkg/... | ${TPARSE}
+    go test -v -cover -coverprofile=$COVERAGE_FILE -json ${DEVBOX_PROJECT_ROOT} ${DEVBOX_PROJECT_ROOT}/pkg/... ${DEVBOX_PROJECT_ROOT}/tests/... | ${TPARSE}
     SUCCESS=$?
     gum log -sl info "Generating coverage report"
     go tool cover -html=$COVERAGE_FILE -o $COVERAGE_HTML
 else
-    go test -v ./ ./pkg/... | ${TPARSE}
+    go test -v -json ${DEVBOX_PROJECT_ROOT} ${DEVBOX_PROJECT_ROOT}/pkg/... ${DEVBOX_PROJECT_ROOT}/tests/... | ${TPARSE}
     SUCCESS=$?
 fi
 

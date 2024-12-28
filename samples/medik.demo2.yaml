@@ -1,0 +1,23 @@
+vitals:
+  - exam: env.is-set
+    vars:
+      - MEDIK_FOO
+      - MEDIK_BAR
+protocols:
+  dingle-bell:
+    vitals:
+      - exam: env.int
+        vars:
+          - MEDIK_INT
+      - exam: env.float-range
+        vars:
+          - MEDIK_FLOAT
+        min: 0.0
+        max: 11.0
+    checks:
+      - exam: env.options
+        vars:
+          - MEDIK_BOOL
+        options:
+          - true
+          - false

@@ -29,7 +29,13 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&NoUseEnv, "no-env", medik.DefaultNoUseEnv, "Won't use an env file")
 }
 
-func Execute() {
+// Execute runs the root command.
+// Setting `args` will override the arguments received from the CLI (useful for testing)
+func Execute(args []string) {
+	if len(args) > 0 {
+		rootCmd.SetArgs(args)
+	}
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -41,6 +47,13 @@ func run(cmd *cobra.Command, args []string) {
 
 	if err != nil {
 		fmt.Printf("Error loading config: %s\n", err)
+		os.Exit(1)
+	}
+
+	_, err = loadEnv()
+
+	if err != nil {
+		fmt.Printf("Error loading env: %s\n", err)
 		os.Exit(1)
 	}
 
