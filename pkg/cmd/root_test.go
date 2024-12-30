@@ -3,21 +3,7 @@ package cmd
 import (
 	"os"
 	"testing"
-
-	"github.com/OJarrisonn/medik/pkg/medik"
 )
-
-func TestNoUseEnv(t *testing.T) {
-	medik.NoUseEnv = true
-
-	_, err := useEnv("")
-
-	if err != nil {
-		t.Errorf("useEnv() failed: %v", err)
-	}
-
-	medik.NoUseEnv = false
-}
 
 func TestUseEmptyEnv(t *testing.T) {
 	_, err := useEnv("")

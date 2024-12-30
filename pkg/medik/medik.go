@@ -8,8 +8,7 @@ const Description = "Medik is a tool for running health checks on a system"
 const Author = "OJarrisonn <jhmtv10@gmail.com>"
 
 const DefaultConfigFile = "medik.yaml"
-const DefaultEnvFile = ".env"
-const DefaultNoUseEnv = false
+const DefaultEnvFile = ""
 const DefaultVerbose = false
 const DefaultNoColor = false
 
@@ -26,6 +25,5 @@ var SuccessColor = color.New(color.FgGreen)
 
 var ConfigFile string
 var EnvFile string
-var NoUseEnv bool
 var Verbose bool
 var NoColor bool

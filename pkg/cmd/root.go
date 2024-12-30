@@ -23,7 +23,6 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&medik.ConfigFile, "config", "c", medik.DefaultConfigFile, "Config file to use")
 	rootCmd.PersistentFlags().StringVarP(&medik.EnvFile, "env", "e", medik.DefaultEnvFile, "Env file to use")
-	rootCmd.PersistentFlags().BoolVar(&medik.NoUseEnv, "no-env", medik.DefaultNoUseEnv, "Won't use an env file")
 	rootCmd.PersistentFlags().BoolVarP(&medik.Verbose, "verbose", "v", medik.DefaultVerbose, "Verbose output")
 	rootCmd.PersistentFlags().BoolVar(&medik.NoColor, "no-color", medik.DefaultNoColor, "No color output")
 }
@@ -95,7 +94,7 @@ func loadConfig() (*config.Medik, error) {
 }
 
 func loadEnv() (bool, error) {
-	if medik.NoUseEnv {
+	if medik.EnvFile == "" {
 		return true, nil
 	}
 
