@@ -23,3 +23,9 @@ var ErrorWithBgColor = color.New(color.BgRed, color.FgBlack)
 var SuccessWithBgColor = color.New(color.BgGreen, color.FgBlack)
 var ErrorColor = color.New(color.FgRed)
 var SuccessColor = color.New(color.FgGreen)
+
+var ConfigFile string
+var EnvFile string
+var NoUseEnv bool
+var Verbose bool
+var NoColor bool

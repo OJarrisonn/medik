@@ -7,10 +7,21 @@ import (
 )
 
 func ReportHeader(header string, success string) string {
+	if medik.NoColor {
+		return reportHeaderNoColor(header, success)
+	}
 	return reportHeaderColor(header, success)
 }
 
 func ReportStatus(key, message string, success bool) string {
+	if medik.NoColor {
+		if success {
+			return fmt.Sprintf("\t %s  %s", key, message)
+		} else {
+			return fmt.Sprintf("\t %s  %s", key, message)
+		}
+	}
+
 	if success {
 		return medik.SuccessWithBgColor.Sprintf("\t %s ", key) + medik.SuccessColor.Sprintf(" %s", message)
 	} else {
@@ -34,6 +45,14 @@ func reportHeaderNoColor(header string, success string) string {
 }
 
 func EnvironmentHealth(healthy bool) string {
+	if medik.NoColor {
+		if healthy {
+			return " Environment Healthy "
+		} else {
+			return " Environment Unhealthy "
+		}
+	}
+
 	if healthy {
 		return medik.SuccessWithBgColor.Sprintf(" Environment Healthy ")
 	}

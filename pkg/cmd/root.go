@@ -20,18 +20,12 @@ var rootCmd = &cobra.Command{
 	Run:     run,
 }
 
-var ConfigFile string
-var EnvFile string
-var NoUseEnv bool
-var Verbose bool
-var NoColor bool
-
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&ConfigFile, "config", "c", medik.DefaultConfigFile, "Config file to use")
-	rootCmd.PersistentFlags().StringVarP(&EnvFile, "env", "e", medik.DefaultEnvFile, "Env file to use")
-	rootCmd.PersistentFlags().BoolVar(&NoUseEnv, "no-env", medik.DefaultNoUseEnv, "Won't use an env file")
-	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", medik.DefaultVerbose, "Verbose output")
-	rootCmd.PersistentFlags().BoolVar(&NoColor, "no-color", medik.DefaultNoColor, "No color output")
+	rootCmd.PersistentFlags().StringVarP(&medik.ConfigFile, "config", "c", medik.DefaultConfigFile, "Config file to use")
+	rootCmd.PersistentFlags().StringVarP(&medik.EnvFile, "env", "e", medik.DefaultEnvFile, "Env file to use")
+	rootCmd.PersistentFlags().BoolVar(&medik.NoUseEnv, "no-env", medik.DefaultNoUseEnv, "Won't use an env file")
+	rootCmd.PersistentFlags().BoolVarP(&medik.Verbose, "verbose", "v", medik.DefaultVerbose, "Verbose output")
+	rootCmd.PersistentFlags().BoolVar(&medik.NoColor, "no-color", medik.DefaultNoColor, "No color output")
 }
 
 // Execute runs the root command.
@@ -70,9 +64,9 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	for _, e := range reports {
-		ok, header, body := e.Format(Verbose)
+		ok, header, body := e.Format(medik.Verbose)
 
-		if ok && !Verbose {
+		if ok && !medik.Verbose {
 			continue
 		}
 
@@ -91,7 +85,7 @@ func run(cmd *cobra.Command, args []string) {
 }
 
 func loadConfig() (*config.Medik, error) {
-	content, err := os.ReadFile(ConfigFile)
+	content, err := os.ReadFile(medik.ConfigFile)
 
 	if err != nil {
 		return nil, err
@@ -101,11 +95,11 @@ func loadConfig() (*config.Medik, error) {
 }
 
 func loadEnv() (bool, error) {
-	if NoUseEnv {
+	if medik.NoUseEnv {
 		return true, nil
 	}
 
-	content, err := os.ReadFile(EnvFile)
+	content, err := os.ReadFile(medik.EnvFile)
 
 	if err != nil {
 		return false, err
