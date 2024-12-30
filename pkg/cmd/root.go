@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/OJarrisonn/medik/pkg/config"
+	"github.com/OJarrisonn/medik/pkg/format"
 	"github.com/OJarrisonn/medik/pkg/medik"
 	"github.com/OJarrisonn/medik/pkg/parse"
 	"github.com/OJarrisonn/medik/pkg/runner"
@@ -23,12 +24,14 @@ var ConfigFile string
 var EnvFile string
 var NoUseEnv bool
 var Verbose bool
+var NoColor bool
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&ConfigFile, "config", "c", medik.DefaultConfigFile, "Config file to use")
 	rootCmd.PersistentFlags().StringVarP(&EnvFile, "env", "e", medik.DefaultEnvFile, "Env file to use")
 	rootCmd.PersistentFlags().BoolVar(&NoUseEnv, "no-env", medik.DefaultNoUseEnv, "Won't use an env file")
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", medik.DefaultVerbose, "Verbose output")
+	rootCmd.PersistentFlags().BoolVar(&NoColor, "no-color", medik.DefaultNoColor, "No color output")
 }
 
 // Execute runs the root command.
@@ -80,10 +83,9 @@ func run(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if success {
-		fmt.Println("Environment is healthy")
-	} else {
-		fmt.Println("Environment is unhealthy")
+	fmt.Println(format.EnvironmentHealth(success))
+
+	if !success {
 		os.Exit(1)
 	}
 }

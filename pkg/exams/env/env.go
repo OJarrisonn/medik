@@ -6,6 +6,8 @@ import (
 
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
+	"github.com/OJarrisonn/medik/pkg/format"
+	"github.com/OJarrisonn/medik/pkg/medik"
 )
 
 // Function to get a parser for a given type `env.*`
@@ -57,16 +59,16 @@ func (r *EnvReport) Format(verbose bool) (bool, string, string) {
 
 	for _, status := range r.Statuses {
 		if !status.Success || verbose {
-			statuses += fmt.Sprintf("\t%v: %v\n", status.Var, status.Message)
+			statuses += format.ReportStatus(status.Var, status.Message, status.Success) + "\n"
 		}
 	}
 
-	success := "succeeds"
+	success := medik.SUCCESS
 	if !r.Success {
-		success = "fails"
+		success = medik.FAILURE
 	}
 
-	return r.Success, fmt.Sprintf("Exam: %v %v", r.Type, success), statuses
+	return r.Success, format.ReportHeader(r.Type, success), statuses
 }
 
 type VarsUnsetError struct {
@@ -99,7 +101,7 @@ func invalidEnvVarStatus(name, value, message string) EnvStatus {
 	return EnvStatus{
 		Success: false,
 		Var:     name,
-		Message: fmt.Sprintf("%v is not valid %v", value, message),
+		Message: fmt.Sprintf("'%v' is not valid: %v", value, message),
 	}
 }
 
