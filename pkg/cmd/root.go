@@ -23,7 +23,6 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&medik.ConfigFile, "config", "c", medik.DefaultConfigFile, "Config file to use")
 	rootCmd.PersistentFlags().StringVarP(&medik.EnvFile, "env", "e", medik.DefaultEnvFile, "Env file to use")
-	rootCmd.PersistentFlags().BoolVarP(&medik.Verbose, "verbose", "v", medik.DefaultVerbose, "Verbose output")
 	rootCmd.PersistentFlags().BoolVar(&medik.NoColor, "no-color", medik.DefaultNoColor, "No color output")
 }
 
@@ -42,30 +41,27 @@ func Execute(args []string) {
 
 func run(cmd *cobra.Command, args []string) {
 	cfg, err := loadConfig()
-
 	if err != nil {
 		fmt.Printf("Error loading config: %s\n", err)
 		os.Exit(1)
 	}
 
 	_, err = loadEnv()
-
 	if err != nil {
 		fmt.Printf("Error loading env: %s\n", err)
 		os.Exit(1)
 	}
 
 	success, reports, err := runner.Run(cfg, args)
-
 	if err != nil {
 		fmt.Printf("Error running medik: %s\n", err)
 		os.Exit(1)
 	}
 
 	for _, e := range reports {
-		ok, header, body := e.Format(medik.Verbose)
+		ok, header, body := e.Format(medik.Verbosity)
 
-		if ok && !medik.Verbose {
+		if ok < medik.Verbosity {
 			continue
 		}
 
@@ -85,7 +81,6 @@ func run(cmd *cobra.Command, args []string) {
 
 func loadConfig() (*config.Medik, error) {
 	content, err := os.ReadFile(medik.ConfigFile)
-
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +94,6 @@ func loadEnv() (bool, error) {
 	}
 
 	content, err := os.ReadFile(medik.EnvFile)
-
 	if err != nil {
 		return false, err
 	}
@@ -109,14 +103,12 @@ func loadEnv() (bool, error) {
 
 func useEnv(content string) (bool, error) {
 	env, err := parse.ParseEnvFile(content)
-
 	if err != nil {
 		return false, err
 	}
 
 	for k, v := range env {
 		err := os.Setenv(k, v)
-
 		if err != nil {
 			return false, err
 		}

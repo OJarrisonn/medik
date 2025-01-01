@@ -3,6 +3,7 @@ package env
 import (
 	"testing"
 
+	"github.com/OJarrisonn/medik/pkg/medik"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -11,8 +12,8 @@ func TestEnvIsSet(t *testing.T) {
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
-	ok, header, body := report.Format(false)
-	assert.False(t, ok)
+	ok, header, body := report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -20,8 +21,8 @@ func TestEnvIsSet(t *testing.T) {
 	t.Setenv("VAR1", "value1")
 	t.Setenv("VAR2", "value2")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 }

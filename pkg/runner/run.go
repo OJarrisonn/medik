@@ -6,6 +6,7 @@ import (
 
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
+	"github.com/OJarrisonn/medik/pkg/medik"
 	"github.com/OJarrisonn/medik/pkg/parse"
 )
 
@@ -63,7 +64,7 @@ func runVitals(vitals []config.Exam) (bool, []exams.Report, error) {
 			}
 
 			report := exam.Examinate()
-			if !report.Succeed() {
+			if report.Level() > medik.OK {
 				success = false
 			}
 
@@ -88,7 +89,7 @@ func runChecks(checks []config.Exam) (bool, []exams.Report, error) {
 			}
 
 			report := exam.Examinate()
-			if !report.Succeed() {
+			if report.Level() > medik.OK {
 				success = false
 			}
 

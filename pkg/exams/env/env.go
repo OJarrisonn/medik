@@ -40,35 +40,30 @@ var parsers = map[string]func(config config.Exam) (exams.Exam, error){
 
 type EnvReport struct {
 	Type     string
-	Success  bool
+	Lvl      int
 	Statuses []EnvStatus
 }
 
 type EnvStatus struct {
-	Success bool
+	Lvl     int
 	Var     string
 	Message string
 }
 
-func (r *EnvReport) Succeed() bool {
-	return r.Success
+func (r *EnvReport) Level() int {
+	return r.Lvl
 }
 
-func (r *EnvReport) Format(verbose bool) (bool, string, string) {
+func (r *EnvReport) Format(verbosity int) (int, string, string) {
 	statuses := ""
 
 	for _, status := range r.Statuses {
-		if !status.Success || verbose {
-			statuses += format.ReportStatus(status.Var, status.Message, status.Success) + "\n"
+		if status.Lvl >= verbosity {
+			statuses += format.ReportStatus(status.Var, status.Message, status.Lvl) + "\n"
 		}
 	}
 
-	success := medik.SUCCESS
-	if !r.Success {
-		success = medik.FAILURE
-	}
-
-	return r.Success, format.ReportHeader(r.Type, success), statuses
+	return r.Lvl, format.ReportHeader(r.Type, r.Lvl), statuses
 }
 
 type VarsUnsetError struct {
@@ -81,7 +76,7 @@ func (e *VarsUnsetError) Error() string {
 
 func validEnvVarStatus(name string) EnvStatus {
 	return EnvStatus{
-		Success: true,
+		Lvl:     medik.OK,
 		Var:     name,
 		Message: "is valid",
 	}
@@ -90,7 +85,7 @@ func validEnvVarStatus(name string) EnvStatus {
 // Function to create a status for an environment variable that is not set
 func unsetEnvVarStatus(name string) EnvStatus {
 	return EnvStatus{
-		Success: false,
+		Lvl:     medik.ERROR,
 		Var:     name,
 		Message: "is not set",
 	}
@@ -99,7 +94,7 @@ func unsetEnvVarStatus(name string) EnvStatus {
 // Function to create a status for an environment variable whose value is invalid
 func invalidEnvVarStatus(name, value, message string) EnvStatus {
 	return EnvStatus{
-		Success: false,
+		Lvl:     medik.ERROR,
 		Var:     name,
 		Message: fmt.Sprintf("'%v' is not valid: %v", value, message),
 	}
@@ -111,23 +106,23 @@ func invalidEnvVarStatus(name, value, message string) EnvStatus {
 // append an UnsetEnvVarError to the errors slice. If no errors are found, it returns true and nil.
 func DefaultExaminate(exam string, vars []string, validate func(name, value string) EnvStatus) *EnvReport {
 	statuses := []EnvStatus{}
-	success := true
+	level := 0
 
 	for _, name := range vars {
 		value, ok := os.LookupEnv(name)
 		if !ok {
-			success = false
+			level = medik.ERROR
 			statuses = append(statuses, unsetEnvVarStatus(name))
 		} else {
 			status := validate(name, value)
 
-			if !status.Success {
-				success = false
+			if status.Lvl > level {
+				level = status.Lvl
 			}
 
 			statuses = append(statuses, status)
 		}
 	}
 
-	return &EnvReport{Type: exam, Success: success, Statuses: statuses}
+	return &EnvReport{Type: exam, Lvl: level, Statuses: statuses}
 }

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/OJarrisonn/medik/pkg/config"
+	"github.com/OJarrisonn/medik/pkg/medik"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -67,8 +68,8 @@ func TestEnvIsSetNotEmpty(t *testing.T) {
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
-	ok, header, body := report.Format(false)
-	assert.False(t, ok)
+	ok, header, body := report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -76,8 +77,8 @@ func TestEnvIsSetNotEmpty(t *testing.T) {
 	t.Setenv("VAR1", "")
 	t.Setenv("VAR2", " ")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -85,8 +86,8 @@ func TestEnvIsSetNotEmpty(t *testing.T) {
 	t.Setenv("VAR1", "value1")
 	t.Setenv("VAR2", "value2")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 }
@@ -97,8 +98,8 @@ func TestEnvRegex(t *testing.T) {
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
-	ok, header, body := report.Format(false)
-	assert.False(t, ok)
+	ok, header, body := report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -106,16 +107,16 @@ func TestEnvRegex(t *testing.T) {
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "value2")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
 	// Test when environment variables match regex
 	t.Setenv("VAR1", "value1")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 }
@@ -126,8 +127,8 @@ func TestEnvOption(t *testing.T) {
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
-	ok, header, body := report.Format(false)
-	assert.False(t, ok)
+	ok, header, body := report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -135,16 +136,16 @@ func TestEnvOption(t *testing.T) {
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "option2")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
 	// Test when environment variables match options
 	t.Setenv("VAR1", "option1")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 }
@@ -154,8 +155,8 @@ func TestEnvInteger(t *testing.T) {
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
-	ok, header, body := report.Format(false)
-	assert.False(t, ok)
+	ok, header, body := report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -163,16 +164,16 @@ func TestEnvInteger(t *testing.T) {
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "123")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
 	// Test when environment variables are integers
 	t.Setenv("VAR1", "456")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 }
@@ -182,8 +183,8 @@ func TestEnvIntegerRange(t *testing.T) {
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
-	ok, header, body := report.Format(false)
-	assert.False(t, ok)
+	ok, header, body := report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -191,24 +192,24 @@ func TestEnvIntegerRange(t *testing.T) {
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "50")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
 	// Test when environment variables are out of range
 	t.Setenv("VAR1", "5")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
 	// Test when environment variables are within range
 	t.Setenv("VAR1", "20")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 }
@@ -218,8 +219,8 @@ func TestEnvFloat(t *testing.T) {
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
-	ok, header, body := report.Format(false)
-	assert.False(t, ok)
+	ok, header, body := report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -227,16 +228,16 @@ func TestEnvFloat(t *testing.T) {
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "123.45")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
 	// Test when environment variables are floats
 	t.Setenv("VAR1", "456.78")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 }
@@ -246,8 +247,8 @@ func TestEnvFloatRange(t *testing.T) {
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
-	ok, header, body := report.Format(false)
-	assert.False(t, ok)
+	ok, header, body := report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -255,24 +256,24 @@ func TestEnvFloatRange(t *testing.T) {
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "50.5")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
 	// Test when environment variables are out of range
 	t.Setenv("VAR1", "5.5")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
 	// Test when environment variables are within range
 	t.Setenv("VAR1", "20.5")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 }
@@ -282,8 +283,8 @@ func TestEnvFileExists(t *testing.T) {
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
-	ok, header, body := report.Format(false)
-	assert.False(t, ok)
+	ok, header, body := report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -291,16 +292,16 @@ func TestEnvFileExists(t *testing.T) {
 	t.Setenv("VAR1", "/invalid/path")
 	t.Setenv("VAR2", "/etc/hosts")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
 	// Test when environment variables are valid files
 	t.Setenv("VAR1", "/etc/hosts")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 }
@@ -310,8 +311,8 @@ func TestEnvFileNotExists(t *testing.T) {
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
-	ok, header, body := report.Format(false)
-	assert.False(t, ok)
+	ok, header, body := report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -319,16 +320,16 @@ func TestEnvFileNotExists(t *testing.T) {
 	t.Setenv("VAR1", "/etc/hosts")
 	t.Setenv("VAR2", "/invalid/path")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
 	// Test when environment variables are not valid files
 	t.Setenv("VAR1", "/invalid/path")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 }
@@ -337,8 +338,8 @@ func TestEnvIpv4Addr(t *testing.T) {
 	exam := &Ipv4{Vars: []string{"VAR1", "VAR2"}}
 	// Test when environment variables are not set
 	report := exam.Examinate()
-	ok, header, body := report.Format(false)
-	assert.False(t, ok)
+	ok, header, body := report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -346,26 +347,27 @@ func TestEnvIpv4Addr(t *testing.T) {
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "192.168.1.1")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
 	// Test when environment variables are valid IPv4 addresses
 	t.Setenv("VAR1", "10.0.0.1")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 }
+
 func TestEnvIpv6Addr(t *testing.T) {
 	exam := &Ipv6{Vars: []string{"VAR1", "VAR2"}}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
-	ok, header, body := report.Format(false)
-	assert.False(t, ok)
+	ok, header, body := report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -373,16 +375,16 @@ func TestEnvIpv6Addr(t *testing.T) {
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "2001:0db8:85a3:0000:0000:8a2e:0370:7334")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
 	// Test when environment variables are valid IPv6 addresses
 	t.Setenv("VAR1", "fe80::1ff:fe23:4567:890a")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 }
@@ -392,8 +394,8 @@ func TestEnvIpAddr(t *testing.T) {
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
-	ok, header, body := report.Format(false)
-	assert.False(t, ok)
+	ok, header, body := report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -401,16 +403,16 @@ func TestEnvIpAddr(t *testing.T) {
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "192.168.1.1")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
 	// Test when environment variables are valid IP addresses
 	t.Setenv("VAR1", "fe80::1ff:fe23:4567:890a")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 }
@@ -420,8 +422,8 @@ func TestEnvHostname(t *testing.T) {
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
-	ok, header, body := report.Format(false)
-	assert.False(t, ok)
+	ok, header, body := report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
@@ -429,16 +431,16 @@ func TestEnvHostname(t *testing.T) {
 	t.Setenv("VAR1", "invalid")
 	t.Setenv("VAR2", "http://example.com")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 
 	// Test when environment variables are valid hostnames
 	t.Setenv("VAR1", "http://example.com")
 	report = exam.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 
@@ -446,14 +448,14 @@ func TestEnvHostname(t *testing.T) {
 	t.Setenv("VAR1", "example.com")
 	t.Setenv("VAR2", "tcp://example.com")
 	report = exam2.Examinate()
-	ok, header, body = report.Format(false)
-	assert.True(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.OK, ok)
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 	t.Setenv("VAR1", "\n")
 	report = exam2.Examinate()
-	ok, header, body = report.Format(false)
-	assert.False(t, ok)
+	ok, header, body = report.Format(medik.WARNING)
+	assert.Equal(t, medik.ERROR, ok)
 	assert.NotEmpty(t, header)
 	assert.NotEmpty(t, body)
 }

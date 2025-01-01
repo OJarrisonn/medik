@@ -37,13 +37,13 @@ func ExamType[E Exam]() string {
 }
 
 type Report interface {
-	// Succeed returns true if the report is successful, false otherwise
-	Succeed() bool
+	// Returns the level of the report
+	Level() int
 
 	// Format the report to a printable string
 	// Verbose indicates if non-error messages should be included
-	// Returns a boolean indicating if the report is a success, a string with the report header and a string with the report body
-	Format(verbose bool) (bool, string, string)
+	// Returns the report level, a string with the report header and a string with the report body
+	Format(verbosity int) (int, string, string)
 }
 
 // An error to describe a strange scenario where the wrong exam parser was called

@@ -2,28 +2,44 @@ package medik
 
 import "github.com/fatih/color"
 
-const Name = "medik"
-const Version = "alpha"
-const Description = "Medik is a tool for running health checks on a system"
-const Author = "OJarrisonn <jhmtv10@gmail.com>"
-
-const DefaultConfigFile = "medik.yaml"
-const DefaultEnvFile = ""
-const DefaultVerbose = false
-const DefaultNoColor = false
-
 const (
-	SUCCESS = "OK"
-	WARNING = "WARN"
-	FAILURE = "ERROR"
+	Name        = "medik"
+	Version     = "alpha"
+	Description = "Medik is a tool for running health checks on a system"
+	Author      = "OJarrisonn <jhmtv10@gmail.com>"
 )
 
-var ErrorWithBgColor = color.New(color.BgRed, color.FgBlack)
-var SuccessWithBgColor = color.New(color.BgGreen, color.FgBlack)
-var ErrorColor = color.New(color.FgRed)
-var SuccessColor = color.New(color.FgGreen)
+const (
+	DefaultConfigFile = "medik.yaml"
+	DefaultEnvFile    = ""
+	DefaultVerbose    = false
+	DefaultNoColor    = false
+)
 
-var ConfigFile string
-var EnvFile string
-var Verbose bool
-var NoColor bool
+const (
+	OK = iota
+	WARNING
+	ERROR
+)
+
+var levels = []string{"OK", "WARNING", "ERROR"}
+
+func LogLevel(level int) string {
+	return levels[level]
+}
+
+var (
+	ErrorWithBgColor   = color.New(color.BgRed, color.FgBlack)
+	WarningWithBgColor = color.New(color.BgYellow, color.FgBlack)
+	SuccessWithBgColor = color.New(color.BgGreen, color.FgBlack)
+	ErrorColor         = color.New(color.FgRed)
+	WarningColor       = color.New(color.FgYellow)
+	SuccessColor       = color.New(color.FgGreen)
+)
+
+var (
+	ConfigFile string
+	EnvFile    string
+	Verbosity  int
+	NoColor    bool
+)
