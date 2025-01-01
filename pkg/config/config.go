@@ -3,18 +3,17 @@ package config
 import "gopkg.in/yaml.v3"
 
 type Medik struct {
-	Vitals    []Exam              `yaml:"vitals,omitempty"`
-	Checks    []Exam              `yaml:"checks,omitempty"`
+	Exams     []Exam              `yaml:"vitals,omitempty"`
 	Protocols map[string]Protocol `yaml:"protocols,omitempty"`
 }
 
 type Protocol struct {
-	Vitals []Exam `yaml:"vitals,omitempty"`
-	Checks []Exam `yaml:"checks,omitempty"`
+	Exams []Exam `yaml:"vitals,omitempty"`
 }
 
 type Exam struct {
 	Type     string      `yaml:"exam"`
+	Level    int         `yaml:"level,omitempty"`
 	Vars     []string    `yaml:"vars,omitempty"`
 	Options  []string    `yaml:"options,omitempty"`
 	Regex    string      `yaml:"regex,omitempty"`
@@ -28,7 +27,6 @@ type Exam struct {
 func Parse(content string) (*Medik, error) {
 	var m Medik
 	err := yaml.Unmarshal([]byte(content), &m)
-
 	if err != nil {
 		return nil, err
 	}

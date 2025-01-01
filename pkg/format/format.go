@@ -50,16 +50,16 @@ func reportHeaderNoColor(header string, level int) string {
 	return fmt.Sprintf(" %s  %s", title, header)
 }
 
-func EnvironmentHealth(healthy bool) string {
+func EnvironmentHealth(status int) string {
 	if medik.NoColor {
-		if healthy {
+		if status == medik.OK {
 			return " Environment Healthy "
 		} else {
 			return " Environment Unhealthy "
 		}
 	}
 
-	if healthy {
+	if status == medik.OK {
 		return medik.SuccessWithBgColor.Sprintf(" Environment Healthy ")
 	}
 	return medik.ErrorWithBgColor.Sprintf(" Environment Unhealthy ")

@@ -18,17 +18,11 @@ func (e *UnknownExamError) Error() string {
 	return fmt.Sprintf("unknown exam: %v", e.ExamType)
 }
 
-func Run(config *config.Medik, protocols []string) (bool, []exams.Report, error) {
-	vitalsSuccess, vitalsReports, vitalsError := runVitals(config.Vitals)
+func Run(config *config.Medik, protocols []string) (int, []exams.Report, error) {
+	examsSuccesses, examsReports, examsError := runExams(config.Exams)
 
-	if vitalsError != nil {
-		return false, nil, vitalsError
-	}
-
-	checksReports, checksError := runChecks(config.Checks)
-
-	if checksError != nil {
-		return false, nil, checksError
+	if examsError != nil {
+		return medik.ERROR, nil, examsError
 	}
 
 	protocolsUsed := config.Protocols
@@ -42,30 +36,30 @@ func Run(config *config.Medik, protocols []string) (bool, []exams.Report, error)
 	protocolsSuccess, protocolsReports, protocolsError := runProtocols(protocolsUsed)
 
 	if protocolsError != nil {
-		return false, nil, protocolsError
+		return medik.ERROR, nil, protocolsError
 	}
 
-	success := vitalsSuccess && protocolsSuccess
+	success := max(examsSuccesses, protocolsSuccess)
 
-	return success, append(append(vitalsReports, checksReports...), protocolsReports...), nil
+	return success, append(examsReports, protocolsReports...), nil
 }
 
-func runVitals(vitals []config.Exam) (bool, []exams.Report, error) {
-	success := true
+func runExams(exs []config.Exam) (int, []exams.Report, error) {
 	reports := []exams.Report{}
+	success := medik.OK
 
-	for _, v := range vitals {
+	for _, v := range exs {
 		if parse, ok := parse.GetExamParser(v.Type); !ok {
-			return false, nil, &UnknownExamError{ExamType: v.Type}
+			return medik.ERROR, nil, &UnknownExamError{ExamType: v.Type}
 		} else {
 			exam, err := parse(v)
 			if err != nil {
-				return false, nil, err
+				return medik.ERROR, nil, err
 			}
 
 			report := exam.Examinate()
 			if report.Level() > medik.OK {
-				success = false
+				success = report.Level()
 			}
 
 			reports = append(reports, report)
@@ -75,51 +69,22 @@ func runVitals(vitals []config.Exam) (bool, []exams.Report, error) {
 	return success, reports, nil
 }
 
-func runChecks(checks []config.Exam) ([]exams.Report, error) {
+func runProtocols(protocols map[string]config.Protocol) (int, []exams.Report, error) {
 	reports := []exams.Report{}
-
-	for _, c := range checks {
-		if parse, ok := parse.GetExamParser(c.Type); !ok {
-			return nil, &UnknownExamError{ExamType: c.Type}
-		} else {
-			exam, err := parse(c)
-			if err != nil {
-				return nil, err
-			}
-
-			report := exam.Examinate()
-
-			reports = append(reports, report)
-		}
-	}
-
-	return reports, nil
-}
-
-func runProtocols(protocols map[string]config.Protocol) (bool, []exams.Report, error) {
-	reports := []exams.Report{}
-	success := true
+	success := medik.OK
 
 	for _, p := range protocols {
-		vitalsSuccess, vitalsReports, vitalsError := runVitals(p.Vitals)
+		examsSuccess, examsReports, examsError := runExams(p.Exams)
 
-		if vitalsError != nil {
-			return false, nil, vitalsError
+		if examsError != nil {
+			return medik.ERROR, nil, examsError
 		}
 
-		reports = append(reports, vitalsReports...)
+		reports = append(reports, examsReports...)
 
-		if !vitalsSuccess {
-			success = false
+		if examsSuccess > success {
+			success = examsSuccess
 		}
-
-		checksReports, checksError := runChecks(p.Checks)
-
-		if checksError != nil {
-			return false, nil, checksError
-		}
-
-		reports = append(reports, checksReports...)
 	}
 
 	return success, reports, nil
