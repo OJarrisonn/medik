@@ -52,13 +52,14 @@ func trimComment(line string) string {
 	lastState := ' '
 	state := ' '
 
+loop:
 	for i, c := range line {
 		tmp := state
 		switch state {
 		case ' ':
 			if c == '#' {
 				line = line[:i]
-				break
+				break loop
 			} else if c == '\'' {
 				state = '\''
 			} else if c == '"' {
@@ -67,15 +68,17 @@ func trimComment(line string) string {
 		case '\\':
 			state = lastState
 		case '\'':
-			if c == '\'' {
+			switch c {
+			case '\'':
 				state = ' '
-			} else if c == '\\' {
+			case '\\':
 				state = '\\'
 			}
 		case '"':
-			if c == '"' {
+			switch c {
+			case '"':
 				state = ' '
-			} else if c == '\\' {
+			case '\\':
 				state = '\\'
 			}
 		}
