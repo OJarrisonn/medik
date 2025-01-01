@@ -8,7 +8,7 @@ import (
 
 const (
 	Name        = "medik"
-	Version     = "alpha"
+	Version     = "0.1.0"
 	Description = "Medik is a tool for running health checks on a system"
 	Author      = "OJarrisonn <jhmtv10@gmail.com>"
 )
