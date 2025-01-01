@@ -25,7 +25,7 @@ func Run(config *config.Medik, protocols []string) (bool, []exams.Report, error)
 		return false, nil, vitalsError
 	}
 
-	_, checksReports, checksError := runChecks(config.Checks)
+	checksReports, checksError := runChecks(config.Checks)
 
 	if checksError != nil {
 		return false, nil, checksError
@@ -75,29 +75,25 @@ func runVitals(vitals []config.Exam) (bool, []exams.Report, error) {
 	return success, reports, nil
 }
 
-func runChecks(checks []config.Exam) (bool, []exams.Report, error) {
-	success := true
+func runChecks(checks []config.Exam) ([]exams.Report, error) {
 	reports := []exams.Report{}
 
 	for _, c := range checks {
 		if parse, ok := parse.GetExamParser(c.Type); !ok {
-			return false, nil, &UnknownExamError{ExamType: c.Type}
+			return nil, &UnknownExamError{ExamType: c.Type}
 		} else {
 			exam, err := parse(c)
 			if err != nil {
-				return false, nil, err
+				return nil, err
 			}
 
 			report := exam.Examinate()
-			if report.Level() > medik.OK {
-				success = false
-			}
 
 			reports = append(reports, report)
 		}
 	}
 
-	return success, reports, nil
+	return reports, nil
 }
 
 func runProtocols(protocols map[string]config.Protocol) (bool, []exams.Report, error) {
@@ -117,7 +113,7 @@ func runProtocols(protocols map[string]config.Protocol) (bool, []exams.Report, e
 			success = false
 		}
 
-		_, checksReports, checksError := runChecks(p.Checks)
+		checksReports, checksError := runChecks(p.Checks)
 
 		if checksError != nil {
 			return false, nil, checksError
