@@ -21,50 +21,22 @@ Medik will allow you to check several aspects of your dev environment
   - [ ] Network settings
   - [ ] Running processes
 
-Each aspect is configured via rules set in the `medik.yaml` file. The will be also a `medik.overrides.yaml` file which every developer my use to apply some overrides in order to tweak Medik to work correctly in each users personal environment.
+Each aspect is configured via exams in the `medik.yaml` file.
 
 ## `medik.yaml`
 
-The main configuration file for your dev environment is `medik.yaml` it follows a simple structure of `protocols` where you describe checks to validate your environment. A `medik.yaml` main contain a default protocol that will be run every time `medik examine` is called and scenario specific protocols that can be run on demand
-
-### `protocol`
-
-A protocol is a set of exams divided between: `vitals` and `checks`. `vitals` are **must-have** validations, if any fail the environment is considered **unhealthy**. `checks` are optional validations, they show a warning if the validation fails but the environment is still considered **healthy**
-
-Protocols are defined by name under `protocols` section.
-
-```yaml
-protocols: # This list the protocols
-  release:                # A protocol to build a release of a project
-    vitals:               # Checks that cannot fail
-      - exam: env.is-set  # Check if the following environment variables are set
-        vars:
-          - SECRET_KEY
-      - exam: env.dir     # Check if the following environment variables are set and point to valid directories
-        vars:
-          - BUILD_DIR
-      - exam: file.exists # Check if a file exists (relative to `medik.yaml`)
-        paths:
-          - ./android/app/app-upload.keystore
-      - exam: service.is-up  # Check if a service is running on the local machine
-        ports:
-          - tcp:8081
-  test:                   # A protocol to check the environment to run a test suit
-    vitals:
-      - exam: cmd.custom
-        cmd:
-          run: pg_isready   # Use a custom command to check if the database is up and running
-          exit-code: 0      # The command should exit with code 0
-    checks:
-      - exam: cmd.custom
-        cmd:
-          run: npx eslint   # Emit a warning if the linting fails
-          exit-code: 0      # The command should exit with code 0
-```
+This file determines the checks that Medik will run on your environment. It is a YAML file with a simple structure. It has two fields `protocols` and `exams`.
 
 ### Exams
 
-Exams are the actual checks that Medik will run on your environment. They are defined by a type and a set of parameters. The following exams are available:
+Exams are the actual checks that Medik will run on your environment. They are defined by a type and a set of parameters. The `exams` field is just a list of those exams.
+
+A couple of attributes might me be set for exams, just a few of those attributes takes effect on all exams:
+
+- `exam`: The type of exam to run
+- `level`: The importance level of the exam. It set's its maximum level. It might be `ok`, `warning` or `error`. The default is `error`, if set to `ok` it will never raise any sort of alert. If set to `warning` it might raise warnings but the exam still succeeds.
+
+The following exams are available (or yet to be implemented):
 
 ### `env`
 
@@ -92,6 +64,19 @@ The set of exams related to environment variables. The field `vars` is a list of
 - `env.ipv6`: Check if an environment variable is set and is a valid IPv6 address
 - `env.ip`: Check if an environment variable is set and is a valid IP address (IPv4 or IPv6)
 - `env.hostname`: Check if an environment variable is set and is a valid hostname (valid url)
+
+```yaml
+exams:
+  - exam: env.is-set
+    vars:
+      - SECRET_KEY
+  - exam: env.int-range
+    level: warning
+    vars:
+      - PORT
+    min: 1024
+    max: 65535
+```
 
 ### `file`
 
@@ -136,10 +121,6 @@ A port can be defined as `<protocol>:<port>` if running locally or `<protocol>:/
 
 This exam checks if a binary is available in the system. The field `bin` is mandatory.
 
-
-
-```yaml
-
 ### `cmd.custom`
 
 > This is work in progress, not implemented yet
@@ -156,13 +137,37 @@ This is a generic exam that allows you to run a custom command and check its out
 
 Using multiple validations will require all of them to pass for the exam to be successful.
 
+### `protocols`
+
+A protocol is a way to group exams and run it only when needed. A protocol uses the same structure as the top-level file (except it cannot have inner protocols). So a protocol is defined under the top-level `protocols` section with a name and it has an `exams` field.
+
+The below protocols could be invoked by running `medik release`, `medik test` or even `medik release test` to run both protocols.
+
 ```yaml
-protocols:
-  test:
-    vitals:
+protocols: # This list the protocols
+  release: # A protocol to build a release of a project
+    exams:
+      - exam: env.is-set # Check if the following environment variables are set
+        vars:
+          - SECRET_KEY
+      - exam: env.dir # Check if the following environment variables are set and point to valid directories
+        vars:
+          - BUILD_DIR
+      - exam: file.exists # Check if a file exists (relative to `medik.yaml`)
+        paths:
+          - ./android/app/app-upload.keystore
+      - exam: service.is-up # Check if a service is running on the local machine
+        ports:
+          - tcp:8081
+  test: # A protocol to check the environment to run a test suit
+    exams:
       - exam: cmd.custom
         cmd:
-          run: pg_isready
-          exit-code: 0
-          stdout-contains: accepting connections
+          run: pg_isready # Use a custom command to check if the database is up and running
+          exit-code: 0 # The command should exit with code 0
+      - exam: cmd.custom
+        level: warning
+        cmd:
+          run: npx eslint # Emit a warning if the linting fails
+          exit-code: 0 # The command should exit with code 0
 ```
