@@ -6,6 +6,7 @@ import (
 
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
+	"github.com/OJarrisonn/medik/pkg/medik"
 )
 
 // Check if an environment variable is set to a file that exists
@@ -14,6 +15,7 @@ import (
 // vars: []string
 type File struct {
 	Vars   []string
+	Level  int
 	Exists bool
 }
 
@@ -21,24 +23,18 @@ func (r *File) Type() string {
 	return "env.file"
 }
 
-func (r *File) Parse(config config.Exam) (exams.Exam, error) {
-	if config.Type != r.Type() {
-		return nil, &exams.WrongExamParserError{Source: config.Type, Using: r.Type()}
-	}
-
-	if len(config.Vars) == 0 {
-		return nil, &VarsUnsetError{Exam: r.Type()}
-	}
-
-	return &File{config.Vars, config.Exists}, nil
+func (r *File) Parse(conf config.Exam) (exams.Exam, error) {
+	return DefaultParse[*File](conf, func(conf config.Exam) (exams.Exam, error) {
+		return &File{conf.Vars, medik.LogLevelFromStr(conf.Level), conf.Exists}, nil
+	})
 }
 
 func (r *File) Examinate() exams.Report {
-	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Level, r.Vars, func(name, value string) EnvStatus {
 		_, err := os.Stat(value)
 
 		if (err == nil) != r.Exists {
-			return invalidEnvVarStatus(name, value, r.ErrorMessage(err))
+			return invalidEnvVarStatus(name, r.Level, value, r.ErrorMessage(err))
 		}
 
 		return validEnvVarStatus(name)

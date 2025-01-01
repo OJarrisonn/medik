@@ -6,6 +6,7 @@ import (
 
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
+	"github.com/OJarrisonn/medik/pkg/medik"
 )
 
 // A rule to check if an environment variable is set to a hostname
@@ -15,6 +16,7 @@ import (
 // protocol: string
 type Hostname struct {
 	Vars     []string
+	Level    int
 	Protocol string
 }
 
@@ -22,24 +24,18 @@ func (r *Hostname) Type() string {
 	return "env.hostname"
 }
 
-func (r *Hostname) Parse(config config.Exam) (exams.Exam, error) {
-	if config.Type != r.Type() {
-		return nil, &exams.WrongExamParserError{Source: config.Type, Using: r.Type()}
-	}
-
-	if len(config.Vars) == 0 {
-		return nil, &VarsUnsetError{Exam: r.Type()}
-	}
-
-	return &Hostname{config.Vars, config.Protocol}, nil
+func (r *Hostname) Parse(conf config.Exam) (exams.Exam, error) {
+	return DefaultParse[*Hostname](conf, func(conf config.Exam) (exams.Exam, error) {
+		return &Hostname{conf.Vars, medik.LogLevelFromStr(conf.Level), conf.Protocol}, nil
+	})
 }
 
 func (r *Hostname) Examinate() exams.Report {
-	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Level, r.Vars, func(name, value string) EnvStatus {
 		ok, _ := r.validateUrl(value)
 
 		if !ok {
-			return invalidEnvVarStatus(name, value, "value should be a valid URL")
+			return invalidEnvVarStatus(name, r.Level, value, "value should be a valid URL")
 		}
 
 		return validEnvVarStatus(name)

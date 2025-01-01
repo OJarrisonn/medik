@@ -1,6 +1,10 @@
 package medik
 
-import "github.com/fatih/color"
+import (
+	"strings"
+
+	"github.com/fatih/color"
+)
 
 const (
 	Name        = "medik"
@@ -22,10 +26,26 @@ const (
 	ERROR
 )
 
+const (
+	MAX_LEVEL     = ERROR
+	DEFAULT_LEVEL = "error"
+)
+
 var levels = []string{"OK", "WARNING", "ERROR"}
 
 func LogLevel(level int) string {
 	return levels[level]
+}
+
+func LogLevelFromStr(level string) int {
+	level = strings.ToUpper(level)
+	for i, l := range levels {
+		if l == level {
+			return i
+		}
+	}
+
+	return MAX_LEVEL
 }
 
 var (

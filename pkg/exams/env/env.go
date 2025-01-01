@@ -83,18 +83,18 @@ func validEnvVarStatus(name string) EnvStatus {
 }
 
 // Function to create a status for an environment variable that is not set
-func unsetEnvVarStatus(name string) EnvStatus {
+func unsetEnvVarStatus(name string, level int) EnvStatus {
 	return EnvStatus{
-		Lvl:     medik.ERROR,
+		Lvl:     level,
 		Var:     name,
 		Message: "is not set",
 	}
 }
 
 // Function to create a status for an environment variable whose value is invalid
-func invalidEnvVarStatus(name, value, message string) EnvStatus {
+func invalidEnvVarStatus(name string, level int, value, message string) EnvStatus {
 	return EnvStatus{
-		Lvl:     medik.ERROR,
+		Lvl:     level,
 		Var:     name,
 		Message: fmt.Sprintf("'%v' is not valid: %v", value, message),
 	}
@@ -104,17 +104,21 @@ func invalidEnvVarStatus(name, value, message string) EnvStatus {
 // variables in `vars`. For those who exist, it validates the value using the `validate` function which should
 // return a boolean (valid or not) and an error if not valid. Those who are not set are considered invalid and
 // append an UnsetEnvVarError to the errors slice. If no errors are found, it returns true and nil.
-func DefaultExaminate(exam string, vars []string, validate func(name, value string) EnvStatus) *EnvReport {
+func DefaultExaminate(exam string, logLevel int, vars []string, validate func(name, value string) EnvStatus) *EnvReport {
 	statuses := []EnvStatus{}
 	level := 0
 
 	for _, name := range vars {
 		value, ok := os.LookupEnv(name)
 		if !ok {
-			level = medik.ERROR
-			statuses = append(statuses, unsetEnvVarStatus(name))
+			level = logLevel
+			statuses = append(statuses, unsetEnvVarStatus(name, logLevel))
 		} else {
 			status := validate(name, value)
+
+			if status.Lvl > logLevel {
+				status.Lvl = logLevel
+			}
 
 			if status.Lvl > level {
 				level = status.Lvl
@@ -125,4 +129,18 @@ func DefaultExaminate(exam string, vars []string, validate func(name, value stri
 	}
 
 	return &EnvReport{Type: exam, Lvl: level, Statuses: statuses}
+}
+
+func DefaultParse[E exams.Exam](config config.Exam, f func(config config.Exam) (exams.Exam, error)) (exams.Exam, error) {
+	var e E
+	ty := e.Type()
+	if config.Type != ty {
+		return nil, &exams.WrongExamParserError{Source: config.Type, Using: ty}
+	}
+
+	if len(config.Vars) == 0 {
+		return nil, &VarsUnsetError{Exam: ty}
+	}
+
+	return f(config)
 }

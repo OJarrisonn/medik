@@ -5,6 +5,7 @@ import (
 
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
+	"github.com/OJarrisonn/medik/pkg/medik"
 )
 
 // Check if an environment variable is a floating number
@@ -12,30 +13,25 @@ import (
 // type: env.float,
 // vars: []string
 type Float struct {
-	Vars []string
+	Vars  []string
+	Level int
 }
 
 func (r *Float) Type() string {
 	return "env.float"
 }
 
-func (r *Float) Parse(config config.Exam) (exams.Exam, error) {
-	if config.Type != r.Type() {
-		return nil, &exams.WrongExamParserError{Source: config.Type, Using: r.Type()}
-	}
-
-	if len(config.Vars) == 0 {
-		return nil, &VarsUnsetError{Exam: r.Type()}
-	}
-
-	return &Float{config.Vars}, nil
+func (r *Float) Parse(conf config.Exam) (exams.Exam, error) {
+	return DefaultParse[*Float](conf, func(conf config.Exam) (exams.Exam, error) {
+		return &Float{conf.Vars, medik.LogLevelFromStr(conf.Level)}, nil
+	})
 }
 
 func (r *Float) Examinate() exams.Report {
-	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Level, r.Vars, func(name, value string) EnvStatus {
 		_, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return invalidEnvVarStatus(name, value, err.Error())
+			return invalidEnvVarStatus(name, r.Level, value, err.Error())
 		}
 
 		return validEnvVarStatus(name)

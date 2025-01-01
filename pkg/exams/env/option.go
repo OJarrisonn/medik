@@ -5,6 +5,7 @@ import (
 
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
+	"github.com/OJarrisonn/medik/pkg/medik"
 )
 
 // Check if an environment variable is set and matches one of a list of possible values
@@ -14,6 +15,7 @@ import (
 // options: []string
 type Option struct {
 	Vars    []string
+	Level   int
 	Options map[string]bool
 }
 
@@ -21,32 +23,26 @@ func (r *Option) Type() string {
 	return "env.options"
 }
 
-func (r *Option) Parse(config config.Exam) (exams.Exam, error) {
-	if config.Type != r.Type() {
-		return nil, &exams.WrongExamParserError{Source: config.Type, Using: r.Type()}
-	}
+func (r *Option) Parse(conf config.Exam) (exams.Exam, error) {
+	return DefaultParse[*Option](conf, func(config config.Exam) (exams.Exam, error) {
+		if len(config.Options) == 0 {
+			return nil, &exams.MissingFieldError{Field: "options", Exam: r.Type()}
+		}
 
-	if len(config.Vars) == 0 {
-		return nil, &VarsUnsetError{Exam: r.Type()}
-	}
+		options := make(map[string]bool)
 
-	if len(config.Options) == 0 {
-		return nil, &exams.MissingFieldError{Field: "options", Exam: r.Type()}
-	}
+		for _, o := range config.Options {
+			options[o] = true
+		}
 
-	options := make(map[string]bool)
-
-	for _, o := range config.Options {
-		options[o] = true
-	}
-
-	return &Option{config.Vars, options}, nil
+		return &Option{config.Vars, medik.LogLevelFromStr(config.Level), options}, nil
+	})
 }
 
 func (r *Option) Examinate() exams.Report {
-	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Level, r.Vars, func(name, value string) EnvStatus {
 		if _, ok := r.Options[value]; !ok {
-			return invalidEnvVarStatus(name, value, r.ErrorMessage())
+			return invalidEnvVarStatus(name, r.Level, value, r.ErrorMessage())
 		}
 
 		return validEnvVarStatus(name)

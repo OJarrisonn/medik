@@ -58,7 +58,7 @@ func runExams(exs []config.Exam) (int, []exams.Report, error) {
 			}
 
 			report := exam.Examinate()
-			if report.Level() > medik.OK {
+			if report.Level() > success {
 				success = report.Level()
 			}
 

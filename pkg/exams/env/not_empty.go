@@ -5,6 +5,7 @@ import (
 
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
+	"github.com/OJarrisonn/medik/pkg/medik"
 )
 
 // Check if an environment variable is set and not empty
@@ -13,29 +14,24 @@ import (
 // type: env.not-empty
 // vars: []string
 type NotEmpty struct {
-	Vars []string
+	Vars  []string
+	Level int
 }
 
 func (r *NotEmpty) Type() string {
 	return "env.not-empty"
 }
 
-func (r *NotEmpty) Parse(config config.Exam) (exams.Exam, error) {
-	if config.Type != r.Type() {
-		return nil, &exams.WrongExamParserError{Source: config.Type, Using: r.Type()}
-	}
-
-	if len(config.Vars) == 0 {
-		return nil, &VarsUnsetError{Exam: r.Type()}
-	}
-
-	return &NotEmpty{config.Vars}, nil
+func (r *NotEmpty) Parse(conf config.Exam) (exams.Exam, error) {
+	return DefaultParse[*NotEmpty](conf, func(config config.Exam) (exams.Exam, error) {
+		return &NotEmpty{config.Vars, medik.LogLevelFromStr(config.Level)}, nil
+	})
 }
 
 func (r *NotEmpty) Examinate() exams.Report {
-	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Level, r.Vars, func(name, value string) EnvStatus {
 		if strings.TrimSpace(value) == "" {
-			return invalidEnvVarStatus(name, value, "value must contain at least one non-whitespace character")
+			return invalidEnvVarStatus(name, r.Level, value, "value must contain at least one non-whitespace character")
 		}
 
 		return validEnvVarStatus(name)

@@ -74,7 +74,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	fmt.Println(format.EnvironmentHealth(success))
 
-	if success > medik.OK {
+	if success >= medik.ERROR {
 		os.Exit(1)
 	}
 }

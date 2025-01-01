@@ -5,6 +5,7 @@ import (
 
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
+	"github.com/OJarrisonn/medik/pkg/medik"
 )
 
 // Check if an environment variable is a number
@@ -13,31 +14,25 @@ import (
 // type: env.int,
 // vars: []string
 type Int struct {
-	Vars []string
+	Vars  []string
+	Level int
 }
 
 func (r *Int) Type() string {
 	return "env.int"
 }
 
-func (r *Int) Parse(config config.Exam) (exams.Exam, error) {
-	if config.Type != r.Type() {
-		return nil, &exams.WrongExamParserError{Source: config.Type, Using: r.Type()}
-	}
-
-	if len(config.Vars) == 0 {
-		return nil, &VarsUnsetError{Exam: r.Type()}
-	}
-
-	return &Int{config.Vars}, nil
+func (r *Int) Parse(conf config.Exam) (exams.Exam, error) {
+	return DefaultParse[*Int](conf, func(conf config.Exam) (exams.Exam, error) {
+		return &Int{conf.Vars, medik.LogLevelFromStr(conf.Level)}, nil
+	})
 }
 
 func (r *Int) Examinate() exams.Report {
-	return DefaultExaminate(r.Type(), r.Vars, func(name, value string) EnvStatus {
+	return DefaultExaminate(r.Type(), r.Level, r.Vars, func(name, value string) EnvStatus {
 		_, err := strconv.Atoi(value)
-
 		if err != nil {
-			return invalidEnvVarStatus(name, value, r.ErrorMessage(err))
+			return invalidEnvVarStatus(name, r.Level, value, r.ErrorMessage(err))
 		}
 
 		return validEnvVarStatus(name)

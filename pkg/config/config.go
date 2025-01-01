@@ -3,17 +3,17 @@ package config
 import "gopkg.in/yaml.v3"
 
 type Medik struct {
-	Exams     []Exam              `yaml:"vitals,omitempty"`
+	Exams     []Exam              `yaml:"exams,omitempty"`
 	Protocols map[string]Protocol `yaml:"protocols,omitempty"`
 }
 
 type Protocol struct {
-	Exams []Exam `yaml:"vitals,omitempty"`
+	Exams []Exam `yaml:"exams,omitempty"`
 }
 
 type Exam struct {
 	Type     string      `yaml:"exam"`
-	Level    int         `yaml:"level,omitempty"`
+	Level    string      `yaml:"level,omitempty"`
 	Vars     []string    `yaml:"vars,omitempty"`
 	Options  []string    `yaml:"options,omitempty"`
 	Regex    string      `yaml:"regex,omitempty"`
