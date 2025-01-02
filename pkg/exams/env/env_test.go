@@ -64,7 +64,7 @@ func TestEnvWrongParser(t *testing.T) {
 }
 
 func TestEnvIsSetNotEmpty(t *testing.T) {
-	exam := &NotEmpty{Vars: []string{"VAR1", "VAR2"}}
+	exam := &NotEmpty{Vars: []string{"VAR1", "VAR2"}, Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
@@ -94,7 +94,7 @@ func TestEnvIsSetNotEmpty(t *testing.T) {
 
 func TestEnvRegex(t *testing.T) {
 	regex, _ := regexp.Compile(`^value\d$`)
-	exam := &Regex{Vars: []string{"VAR1", "VAR2"}, Regex: regex}
+	exam := &Regex{Vars: []string{"VAR1", "VAR2"}, Regex: regex, Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
@@ -123,7 +123,7 @@ func TestEnvRegex(t *testing.T) {
 
 func TestEnvOption(t *testing.T) {
 	options := map[string]bool{"option1": true, "option2": true}
-	exam := &Option{Vars: []string{"VAR1", "VAR2"}, Options: options}
+	exam := &Option{Vars: []string{"VAR1", "VAR2"}, Options: options, Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
@@ -151,7 +151,7 @@ func TestEnvOption(t *testing.T) {
 }
 
 func TestEnvInteger(t *testing.T) {
-	exam := &Int{Vars: []string{"VAR1", "VAR2"}}
+	exam := &Int{Vars: []string{"VAR1", "VAR2"}, Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
@@ -179,7 +179,7 @@ func TestEnvInteger(t *testing.T) {
 }
 
 func TestEnvIntegerRange(t *testing.T) {
-	exam := &IntRange{Vars: []string{"VAR1", "VAR2"}, Min: 10, Max: 100}
+	exam := &IntRange{Vars: []string{"VAR1", "VAR2"}, Min: 10, Max: 100, Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
@@ -215,7 +215,7 @@ func TestEnvIntegerRange(t *testing.T) {
 }
 
 func TestEnvFloat(t *testing.T) {
-	exam := &Float{Vars: []string{"VAR1", "VAR2"}}
+	exam := &Float{Vars: []string{"VAR1", "VAR2"}, Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
@@ -243,7 +243,7 @@ func TestEnvFloat(t *testing.T) {
 }
 
 func TestEnvFloatRange(t *testing.T) {
-	exam := &FloatRange{Vars: []string{"VAR1", "VAR2"}, Min: 10.5, Max: 100.5}
+	exam := &FloatRange{Vars: []string{"VAR1", "VAR2"}, Min: 10.5, Max: 100.5, Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
@@ -279,7 +279,7 @@ func TestEnvFloatRange(t *testing.T) {
 }
 
 func TestEnvFileExists(t *testing.T) {
-	exam := &File{Vars: []string{"VAR1", "VAR2"}, Exists: true}
+	exam := &File{Vars: []string{"VAR1", "VAR2"}, Exists: true, Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
@@ -307,7 +307,7 @@ func TestEnvFileExists(t *testing.T) {
 }
 
 func TestEnvFileNotExists(t *testing.T) {
-	exam := &File{Vars: []string{"VAR1", "VAR2"}, Exists: false}
+	exam := &File{Vars: []string{"VAR1", "VAR2"}, Exists: false, Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
@@ -335,7 +335,7 @@ func TestEnvFileNotExists(t *testing.T) {
 }
 
 func TestEnvIpv4Addr(t *testing.T) {
-	exam := &Ipv4{Vars: []string{"VAR1", "VAR2"}}
+	exam := &Ipv4{Vars: []string{"VAR1", "VAR2"}, Level: medik.ERROR}
 	// Test when environment variables are not set
 	report := exam.Examinate()
 	ok, header, body := report.Format(medik.WARNING)
@@ -362,7 +362,7 @@ func TestEnvIpv4Addr(t *testing.T) {
 }
 
 func TestEnvIpv6Addr(t *testing.T) {
-	exam := &Ipv6{Vars: []string{"VAR1", "VAR2"}}
+	exam := &Ipv6{Vars: []string{"VAR1", "VAR2"}, Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
@@ -390,7 +390,7 @@ func TestEnvIpv6Addr(t *testing.T) {
 }
 
 func TestEnvIpAddr(t *testing.T) {
-	exam := &Ip{Vars: []string{"VAR1", "VAR2"}}
+	exam := &Ip{Vars: []string{"VAR1", "VAR2"}, Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
@@ -418,7 +418,7 @@ func TestEnvIpAddr(t *testing.T) {
 }
 
 func TestEnvHostname(t *testing.T) {
-	exam := &Hostname{Vars: []string{"VAR1", "VAR2"}, Protocol: "http"}
+	exam := &Hostname{Vars: []string{"VAR1", "VAR2"}, Protocol: "http", Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
@@ -444,7 +444,7 @@ func TestEnvHostname(t *testing.T) {
 	assert.NotEmpty(t, header)
 	assert.Empty(t, body)
 
-	exam2 := &Hostname{Vars: []string{"VAR1", "VAR2"}, Protocol: ""}
+	exam2 := &Hostname{Vars: []string{"VAR1", "VAR2"}, Protocol: "", Level: medik.ERROR}
 	t.Setenv("VAR1", "example.com")
 	t.Setenv("VAR2", "tcp://example.com")
 	report = exam2.Examinate()
@@ -461,7 +461,7 @@ func TestEnvHostname(t *testing.T) {
 }
 
 func TestEnvIsSetParse(t *testing.T) {
-	exam := &IsSet{}
+	exam := &IsSet{Level: medik.ERROR}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -474,11 +474,11 @@ func TestEnvIsSetParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.is-set", Vars: []string{"VAR1"}})
 	assert.Nil(t, err)
-	assert.Equal(t, &IsSet{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &IsSet{Vars: []string{"VAR1"}, Level: medik.ERROR}, parsed)
 }
 
 func TestEnvIsSetNotEmptyParse(t *testing.T) {
-	exam := &NotEmpty{}
+	exam := &NotEmpty{Level: medik.ERROR}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -491,11 +491,11 @@ func TestEnvIsSetNotEmptyParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.not-empty", Vars: []string{"VAR1"}})
 	assert.Nil(t, err)
-	assert.Equal(t, &NotEmpty{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &NotEmpty{Vars: []string{"VAR1"}, Level: medik.ERROR}, parsed)
 }
 
 func TestEnvRegexParse(t *testing.T) {
-	exam := &Regex{}
+	exam := &Regex{Level: medik.ERROR}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -520,7 +520,7 @@ func TestEnvRegexParse(t *testing.T) {
 }
 
 func TestEnvOptionParse(t *testing.T) {
-	exam := &Option{}
+	exam := &Option{Level: medik.ERROR}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -541,7 +541,7 @@ func TestEnvOptionParse(t *testing.T) {
 }
 
 func TestEnvIntegerParse(t *testing.T) {
-	exam := &Int{}
+	exam := &Int{Level: medik.ERROR}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -554,11 +554,11 @@ func TestEnvIntegerParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.int", Vars: []string{"VAR1"}})
 	assert.Nil(t, err)
-	assert.Equal(t, &Int{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &Int{Vars: []string{"VAR1"}, Level: medik.ERROR}, parsed)
 }
 
 func TestEnvIntegerRangeParse(t *testing.T) {
-	exam := &IntRange{}
+	exam := &IntRange{Level: medik.ERROR}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -579,11 +579,11 @@ func TestEnvIntegerRangeParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.int-range", Vars: []string{"VAR1"}, Min: 0, Max: 10})
 	assert.Nil(t, err)
-	assert.Equal(t, &IntRange{Vars: []string{"VAR1"}, Min: 0, Max: 10}, parsed)
+	assert.Equal(t, &IntRange{Vars: []string{"VAR1"}, Min: 0, Max: 10, Level: medik.ERROR}, parsed)
 }
 
 func TestEnvFloatParse(t *testing.T) {
-	exam := &Float{}
+	exam := &Float{Level: medik.ERROR}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -596,11 +596,11 @@ func TestEnvFloatParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.float", Vars: []string{"VAR1"}})
 	assert.Nil(t, err)
-	assert.Equal(t, &Float{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &Float{Vars: []string{"VAR1"}, Level: medik.ERROR}, parsed)
 }
 
 func TestEnvFloatRangeParse(t *testing.T) {
-	exam := &FloatRange{}
+	exam := &FloatRange{Level: medik.ERROR}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -621,11 +621,11 @@ func TestEnvFloatRangeParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.float-range", Vars: []string{"VAR1"}, Min: 0.0, Max: 10.0})
 	assert.Nil(t, err)
-	assert.Equal(t, &FloatRange{Vars: []string{"VAR1"}, Min: 0.0, Max: 10.0}, parsed)
+	assert.Equal(t, &FloatRange{Vars: []string{"VAR1"}, Min: 0.0, Max: 10.0, Level: medik.ERROR}, parsed)
 }
 
 func TestEnvFileParse(t *testing.T) {
-	exam := &File{}
+	exam := &File{Level: medik.ERROR}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -638,11 +638,11 @@ func TestEnvFileParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.file", Vars: []string{"VAR1"}})
 	assert.Nil(t, err)
-	assert.Equal(t, &File{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &File{Vars: []string{"VAR1"}, Level: medik.ERROR}, parsed)
 }
 
 func TestEnvDirParse(t *testing.T) {
-	exam := &Dir{}
+	exam := &Dir{Level: medik.ERROR}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -655,11 +655,11 @@ func TestEnvDirParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.dir", Vars: []string{"VAR1"}})
 	assert.Nil(t, err)
-	assert.Equal(t, &Dir{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &Dir{Vars: []string{"VAR1"}, Level: medik.ERROR}, parsed)
 }
 
 func TestEnvIpv4AddrParse(t *testing.T) {
-	exam := &Ipv4{}
+	exam := &Ipv4{Level: medik.ERROR}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -672,11 +672,11 @@ func TestEnvIpv4AddrParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.ipv4", Vars: []string{"VAR1"}})
 	assert.Nil(t, err)
-	assert.Equal(t, &Ipv4{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &Ipv4{Vars: []string{"VAR1"}, Level: medik.ERROR}, parsed)
 }
 
 func TestEnvIpv6AddrParse(t *testing.T) {
-	exam := &Ipv6{}
+	exam := &Ipv6{Level: medik.ERROR}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -689,11 +689,11 @@ func TestEnvIpv6AddrParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.ipv6", Vars: []string{"VAR1"}})
 	assert.Nil(t, err)
-	assert.Equal(t, &Ipv6{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &Ipv6{Vars: []string{"VAR1"}, Level: medik.ERROR}, parsed)
 }
 
 func TestEnvIpAddrParse(t *testing.T) {
-	exam := &Ip{}
+	exam := &Ip{Level: medik.ERROR}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -706,11 +706,11 @@ func TestEnvIpAddrParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.ip", Vars: []string{"VAR1"}})
 	assert.Nil(t, err)
-	assert.Equal(t, &Ip{Vars: []string{"VAR1"}}, parsed)
+	assert.Equal(t, &Ip{Vars: []string{"VAR1"}, Level: medik.ERROR}, parsed)
 }
 
 func TestEnvHostnameParse(t *testing.T) {
-	exam := &Hostname{}
+	exam := &Hostname{Level: medik.ERROR}
 
 	// Test invalid type
 	_, err := exam.Parse(config.Exam{Type: "invalid"})
@@ -723,5 +723,5 @@ func TestEnvHostnameParse(t *testing.T) {
 	// Test valid config
 	parsed, err := exam.Parse(config.Exam{Type: "env.hostname", Vars: []string{"VAR1"}, Protocol: "http"})
 	assert.Nil(t, err)
-	assert.Equal(t, &Hostname{Vars: []string{"VAR1"}, Protocol: "http"}, parsed)
+	assert.Equal(t, &Hostname{Vars: []string{"VAR1"}, Protocol: "http", Level: medik.ERROR}, parsed)
 }

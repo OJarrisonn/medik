@@ -8,7 +8,7 @@ import (
 )
 
 func TestEnvDirExists(t *testing.T) {
-	exam := &Dir{Vars: []string{"VAR1", "VAR2"}, Exists: true}
+	exam := &Dir{Vars: []string{"VAR1", "VAR2"}, Exists: true, Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()
@@ -36,7 +36,7 @@ func TestEnvDirExists(t *testing.T) {
 }
 
 func TestEnvDirNotExists(t *testing.T) {
-	exam := &Dir{Vars: []string{"VAR1", "VAR2"}, Exists: false}
+	exam := &Dir{Vars: []string{"VAR1", "VAR2"}, Exists: false, Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()

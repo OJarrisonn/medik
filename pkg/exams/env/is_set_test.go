@@ -8,7 +8,7 @@ import (
 )
 
 func TestEnvIsSet(t *testing.T) {
-	exam := &IsSet{Vars: []string{"VAR1", "VAR2"}}
+	exam := &IsSet{Vars: []string{"VAR1", "VAR2"}, Level: medik.ERROR}
 
 	// Test when environment variables are not set
 	report := exam.Examinate()

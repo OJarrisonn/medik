@@ -7,10 +7,12 @@
     "delve@1.23",
     "tparse@0.16"
   ],
+  "env": {
+    "NIX_HARDENING_ENABLE": "stackprotector pic strictoverflow format relro bindnow",
+    "NIX_CFLAGS_COMPILE": "-U_FORTIFY_SOURCE"
+  },
   "shell": {
-    "init_hook": [
-      "echo 'Welcome to devbox!' > /dev/null"
-    ],
+    "init_hook": ["echo 'Welcome to devbox!' > /dev/null"],
     "scripts": {
       "lint": "${DEVBOX_PROJECT_ROOT}/scripts/lint $*",
       "test": "${DEVBOX_PROJECT_ROOT}/scripts/test $*"

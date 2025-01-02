@@ -1,11 +1,11 @@
-vitals:
+exams:
   - exam: env.is-set
     vars:
       - MEDIK_FOO
       - MEDIK_BAR
 protocols:
   dingle-bell:
-    vitals:
+    exams:
       - exam: env.int
         vars:
           - MEDIK_INT
@@ -14,8 +14,8 @@ protocols:
           - MEDIK_FLOAT
         min: 0.0
         max: 11.0
-    checks:
       - exam: env.options
+        level: warning
         vars:
           - MEDIK_BOOL
         options:

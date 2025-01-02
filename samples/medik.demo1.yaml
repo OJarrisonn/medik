@@ -1,4 +1,4 @@
-vitals:
+exams:
   - exam: env.is-set
     vars:
       - MEDIK_FOO
