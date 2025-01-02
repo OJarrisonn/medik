@@ -163,3 +163,51 @@ func TestLoadConfigFile(t *testing.T) {
 		t.Errorf("loadConfig() failed: %v", config.Exams)
 	}
 }
+
+func TestSetVerbosityMore(t *testing.T) {
+	medik.Verbosity = medik.DefaultVerbosity
+	moreVerbose = 1
+	lessVerbose = 0
+
+	setVerbosity()
+	if medik.Verbosity != medik.DefaultVerbosity-1 {
+		t.Errorf("setVerbosity() failed to increase verbosity: %v", medik.Verbosity)
+	}
+	medik.Verbosity = medik.DefaultVerbosity
+}
+
+func TestSetVerbosityLess(t *testing.T) {
+	medik.Verbosity = medik.DefaultVerbosity
+	lessVerbose = 1
+	moreVerbose = 0
+
+	setVerbosity()
+	if medik.Verbosity != medik.DefaultVerbosity+1 {
+		t.Errorf("setVerbosity() failed do decrease verbosity: %v", medik.Verbosity)
+	}
+	medik.Verbosity = medik.DefaultVerbosity
+}
+
+func TestSetVerbosityOverflow(t *testing.T) {
+	medik.Verbosity = medik.DefaultVerbosity
+	moreVerbose = 0
+	lessVerbose = medik.MAX_LEVEL
+
+	setVerbosity()
+	if medik.Verbosity != medik.MAX_LEVEL {
+		t.Errorf("setVerbosity() failed to adapt to overflow: %v", medik.Verbosity)
+	}
+	medik.Verbosity = medik.DefaultVerbosity
+}
+
+func TestSetVerbosityUnderflow(t *testing.T) {
+	medik.Verbosity = medik.DefaultVerbosity
+	moreVerbose = medik.MAX_LEVEL
+	lessVerbose = 0
+
+	setVerbosity()
+	if medik.Verbosity != 0 {
+		t.Errorf("setVerbosity() failed to adapt to underflow: %v", medik.Verbosity)
+	}
+	medik.Verbosity = medik.DefaultVerbosity
+}

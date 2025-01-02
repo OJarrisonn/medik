@@ -31,22 +31,7 @@ func init() {
 	rootCmd.PersistentFlags().CountVarP(&lessVerbose, "less-verbose", "V", "Decrease verbosity")
 
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		// Reverse the verbosity logic: more `-v` is less verbose
-		if moreVerbose > medik.MAX_LEVEL {
-			moreVerbose = medik.MAX_LEVEL
-		}
-		if lessVerbose > medik.MAX_LEVEL {
-			lessVerbose = medik.MAX_LEVEL
-		}
-
-		if moreVerbose > 0 || lessVerbose > 0 {
-			medik.Verbosity += lessVerbose - moreVerbose
-			if medik.Verbosity < 0 {
-				medik.Verbosity = 0
-			} else if medik.Verbosity > medik.MAX_LEVEL {
-				medik.Verbosity = medik.MAX_LEVEL
-			}
-		}
+		setVerbosity()
 	}
 }
 
@@ -60,6 +45,24 @@ func Execute(args []string) {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+	}
+}
+
+func setVerbosity() {
+	if moreVerbose > medik.MAX_LEVEL {
+		moreVerbose = medik.MAX_LEVEL
+	}
+	if lessVerbose > medik.MAX_LEVEL {
+		lessVerbose = medik.MAX_LEVEL
+	}
+
+	if moreVerbose > 0 || lessVerbose > 0 {
+		medik.Verbosity += lessVerbose - moreVerbose
+		if medik.Verbosity < 0 {
+			medik.Verbosity = 0
+		} else if medik.Verbosity > medik.MAX_LEVEL {
+			medik.Verbosity = medik.MAX_LEVEL
+		}
 	}
 }
 
