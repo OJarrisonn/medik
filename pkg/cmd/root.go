@@ -20,10 +20,34 @@ var rootCmd = &cobra.Command{
 	Run:     run,
 }
 
+var lessVerbose,
+	moreVerbose int
+
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&medik.ConfigFile, "config", "c", medik.DefaultConfigFile, "Config file to use")
 	rootCmd.PersistentFlags().StringVarP(&medik.EnvFile, "env", "e", medik.DefaultEnvFile, "Env file to use")
 	rootCmd.PersistentFlags().BoolVar(&medik.NoColor, "no-color", medik.DefaultNoColor, "No color output")
+	rootCmd.PersistentFlags().CountVarP(&moreVerbose, "verbose", "v", "Increase verbosity")
+	rootCmd.PersistentFlags().CountVarP(&lessVerbose, "less-verbose", "V", "Decrease verbosity")
+
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		// Reverse the verbosity logic: more `-v` is less verbose
+		if moreVerbose > medik.MAX_LEVEL {
+			moreVerbose = medik.MAX_LEVEL
+		}
+		if lessVerbose > medik.MAX_LEVEL {
+			lessVerbose = medik.MAX_LEVEL
+		}
+
+		if moreVerbose > 0 || lessVerbose > 0 {
+			medik.Verbosity += lessVerbose - moreVerbose
+			if medik.Verbosity < 0 {
+				medik.Verbosity = 0
+			} else if medik.Verbosity > medik.MAX_LEVEL {
+				medik.Verbosity = medik.MAX_LEVEL
+			}
+		}
+	}
 }
 
 // Execute runs the root command.

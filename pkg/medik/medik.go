@@ -16,7 +16,7 @@ const (
 const (
 	DefaultConfigFile = "medik.yaml"
 	DefaultEnvFile    = ""
-	DefaultVerbose    = false
+	DefaultVerbosity  = 1
 	DefaultNoColor    = false
 )
 
@@ -60,6 +60,6 @@ var (
 var (
 	ConfigFile string
 	EnvFile    string
-	Verbosity  int
+	Verbosity  int = DefaultVerbosity
 	NoColor    bool
 )
