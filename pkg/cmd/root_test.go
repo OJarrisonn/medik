@@ -7,7 +7,6 @@ import (
 
 func TestUseEmptyEnv(t *testing.T) {
 	_, err := useEnv("")
-
 	if err != nil {
 		t.Errorf("useEnv() failed: %v", err)
 	}
@@ -15,7 +14,6 @@ func TestUseEmptyEnv(t *testing.T) {
 
 func TestUseEnv(t *testing.T) {
 	_, err := useEnv("FOO=bar")
-
 	if err != nil {
 		t.Errorf("useEnv() failed: %v", err)
 	}
@@ -29,7 +27,6 @@ func TestUseEnv(t *testing.T) {
 
 func TestUseEnvWithComment(t *testing.T) {
 	_, err := useEnv("# FOO=bar")
-
 	if err != nil {
 		t.Errorf("useEnv() failed: % v", err)
 	}
@@ -43,7 +40,6 @@ func TestUseEnvWithComment(t *testing.T) {
 
 func TestUseEnvWithMultilines(t *testing.T) {
 	_, err := useEnv("FOO=bar\nBAR=baz")
-
 	if err != nil {
 		t.Errorf("useEnv() failed: %v", err)
 	}
@@ -62,7 +58,6 @@ func TestUseEnvWithMultilines(t *testing.T) {
 
 func TestUseEnvWithQuotes(t *testing.T) {
 	_, err := useEnv("FOO=\"bar\"")
-
 	if err != nil {
 		t.Errorf("useEnv() failed: %v", err)
 	}
@@ -76,7 +71,6 @@ func TestUseEnvWithQuotes(t *testing.T) {
 
 func TestUseEnvWithQuotesAndComment(t *testing.T) {
 	_, err := useEnv("FOO=\"bar\" # baz")
-
 	if err != nil {
 		t.Errorf("useEnv() failed: %v", err)
 	}
