@@ -141,3 +141,25 @@ func TestUseEnvWithQuotesAndComment(t *testing.T) {
 
 	os.Unsetenv("FOO")
 }
+
+func TestLoadConfigFileInexistent(t *testing.T) {
+	medik.ConfigFile = "/this/file/is/inexistent.yaml"
+
+	_, err := loadConfig()
+	if err == nil {
+		t.Error("loadConfig() accepted an non existent file")
+	}
+}
+
+func TestLoadConfigFile(t *testing.T) {
+	medik.ConfigFile = "../../samples/root_test.yaml"
+
+	config, err := loadConfig()
+	if err != nil {
+		t.Errorf("loadConfig() failed: %v", err)
+	}
+
+	if len(config.Exams) != 1 {
+		t.Errorf("loadConfig() failed: %v", config.Exams)
+	}
+}

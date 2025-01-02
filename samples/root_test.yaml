@@ -1,0 +1,5 @@
+exams:
+  - exam: env.is-set
+    vars:
+      - HOME
+      - USER
