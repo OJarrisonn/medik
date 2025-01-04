@@ -191,7 +191,7 @@ func TestSetVerbosityLess(t *testing.T) {
 func TestSetVerbosityOverflow(t *testing.T) {
 	medik.Verbosity = medik.DefaultVerbosity
 	moreVerbose = 0
-	lessVerbose = medik.MAX_LEVEL
+	lessVerbose = medik.MAX_LEVEL + 1
 
 	setVerbosity()
 	if medik.Verbosity != medik.MAX_LEVEL {
@@ -202,7 +202,7 @@ func TestSetVerbosityOverflow(t *testing.T) {
 
 func TestSetVerbosityUnderflow(t *testing.T) {
 	medik.Verbosity = medik.DefaultVerbosity
-	moreVerbose = medik.MAX_LEVEL
+	moreVerbose = medik.MAX_LEVEL + 1
 	lessVerbose = 0
 
 	setVerbosity()
