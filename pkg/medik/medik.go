@@ -34,6 +34,11 @@ const (
 var levels = []string{"OK", "WARNING", "ERROR"}
 
 func LogLevel(level int) string {
+	if level >= len(levels) {
+		level = len(levels) - 1
+	} else if level < 0 {
+		level = 0
+	}
 	return levels[level]
 }
 
