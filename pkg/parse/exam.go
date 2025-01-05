@@ -6,6 +6,7 @@ import (
 	"github.com/OJarrisonn/medik/pkg/config"
 	"github.com/OJarrisonn/medik/pkg/exams"
 	"github.com/OJarrisonn/medik/pkg/exams/env"
+	"github.com/OJarrisonn/medik/pkg/exams/file"
 )
 
 // Returns the parser for a given type
@@ -16,6 +17,8 @@ func GetExamParser(ty string) (func(config config.Exam) (exams.Exam, error), boo
 	switch category {
 	case "env":
 		return env.GetParser(ty)
+	case "file":
+		return file.GetParser(ty)
 	default:
 		return nil, false
 	}

@@ -15,6 +15,7 @@ type Exam struct {
 	Type     string      `yaml:"exam"`
 	Level    string      `yaml:"level,omitempty"`
 	Vars     []string    `yaml:"vars,omitempty"`
+	Paths    []string    `yaml:"paths,omitempty"`
 	Options  []string    `yaml:"options,omitempty"`
 	Regex    string      `yaml:"regex,omitempty"`
 	Min      interface{} `yaml:"min,omitempty"`
