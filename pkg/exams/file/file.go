@@ -23,10 +23,12 @@ func (r *FileReport) Format(verbosity int) (int, string, string) {
 	statuses := ""
 
 	for _, status := range r.Statuses {
-		statuses += format.ReportStatus(status.Path, status.Message, status.Lvl) + "\n"
+		if status.Lvl >= verbosity {
+			statuses += format.ReportStatus(status.Path, status.Message, status.Lvl) + "\n"
+		}
 	}
 
-	return r.Lvl, r.Type, statuses
+	return r.Lvl, format.ReportHeader(r.Type, r.Lvl), statuses
 }
 
 // A status from a part of the execution of a `file.*` exam
@@ -37,7 +39,9 @@ type FileStatus struct {
 }
 
 var parsers = map[string]func(config config.Exam) (exams.Exam, error){
-	exams.ExamType[*Path](): exams.ExamParse[*Path](),
+	exams.ExamType[*Path]():   exams.ExamParse[*Path](),
+	exams.ExamType[*IsFile](): exams.ExamParse[*IsFile](),
+	exams.ExamType[*IsDir]():  exams.ExamParse[*IsDir](),
 }
 
 // Function to get a parser for a given type `env.*`
@@ -55,17 +59,17 @@ func GetParser(ty string) (func(config config.Exam) (exams.Exam, error), bool) {
 // variables in `vars`. For those who exist, it validates the value using the `validate` function which should
 // return a boolean (valid or not) and an error if not valid. Those who are not set are considered invalid and
 // append an UnsetEnvVarError to the errors slice. If no errors are found, it returns true and nil.
-func DefaultExaminate(exam string, logLevel int, vars []string, validate func(name, value string) FileStatus) *FileReport {
+func DefaultExaminate(exam string, logLevel int, paths []string, validate func(path string, stat os.FileInfo) FileStatus) *FileReport {
 	statuses := []FileStatus{}
 	level := 0
 
-	for _, name := range vars {
-		value, ok := os.LookupEnv(name)
-		if !ok {
+	for _, path := range paths {
+		stat, err := os.Stat(path)
+		if err != nil {
 			level = logLevel
-			statuses = append(statuses, inexistentPathStatus(name, logLevel))
+			statuses = append(statuses, inexistentPathStatus(path, logLevel))
 		} else {
-			status := validate(name, value)
+			status := validate(path, stat)
 
 			if status.Lvl > logLevel {
 				status.Lvl = logLevel
