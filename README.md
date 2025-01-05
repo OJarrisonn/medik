@@ -84,13 +84,13 @@ exams:
 
 The set of exams related to files and folders. The field `paths` is a list of path to be checked and is mandatory for all of the below listed exams.
 
-- [ ] `file.exists`: Check if a file exists
-- [ ] `file.not-exists`: Check if a file does not exist
+- [x] `file.exists`: Check if a file exists
+- [x] `file.not-exists`: Check if a file does not exist
 - [ ] `file.is-empty`: Check if a file is empty
 - [ ] `file.is-not-empty`: Check if a file is not empty
 - [ ] `file.is-hidden`: Check if a file is hidden
-- [ ] `file.is-file`: Check if a path points to a file
-- [ ] `file.is-dir`: Check if a path points to a directory
+- [x] `file.is-file`: Check if a path points to a file
+- [x] `file.is-dir`: Check if a path points to a directory
 - [ ] `file.is-symlink`: Check if a path points to a symlink
 - [ ] `file.is-socket`: Check if a path points to a socket
 - [ ] `file.is-pipe`: Check if a path points to a pipe
