@@ -1,12 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.13.7/.schema/devbox.schema.json",
-  "packages": [
-    "go@1.23",
-    "golangci-lint@1.62",
-    "gum@0.14.5",
-    "delve@1.23",
-    "tparse@0.16"
-  ],
+  "packages": {
+    "go": "1.23",
+    "golangci-lint": "1.62",
+    "gum": "0.14.5",
+    "delve": "1.23",
+    "tparse": "0.16"
+  },
   "env": {
     "NIX_HARDENING_ENABLE": "stackprotector pic strictoverflow format relro bindnow",
     "NIX_CFLAGS_COMPILE": "-U_FORTIFY_SOURCE"
