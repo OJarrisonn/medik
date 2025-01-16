@@ -39,9 +39,11 @@ type FileStatus struct {
 }
 
 var parsers = map[string]func(config config.Exam) (exams.Exam, error){
-	exams.ExamType[*Path]():   exams.ExamParse[*Path](),
-	exams.ExamType[*IsFile](): exams.ExamParse[*IsFile](),
-	exams.ExamType[*IsDir]():  exams.ExamParse[*IsDir](),
+	exams.ExamType[*Path]():       exams.ExamParse[*Path](),
+	exams.ExamType[*IsFile]():     exams.ExamParse[*IsFile](),
+	exams.ExamType[*IsDir]():      exams.ExamParse[*IsDir](),
+	exams.ExamType[*IsEmpty]():    exams.ExamParse[*IsEmpty](),
+	exams.ExamType[*IsNotEmpty](): exams.ExamParse[*IsNotEmpty](),
 }
 
 // Function to get a parser for a given type `env.*`
